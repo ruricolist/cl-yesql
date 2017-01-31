@@ -33,8 +33,8 @@ function definition with a specification of what the function returns.
     SELECT count(*) AS count
     FROM user
 
-    -- name: young-users-by-country
-    SELECT *
+    -- name: young-user-names-by-country @column
+    SELECT name
     FROM user
     WHERE (
       country_code = ?
@@ -62,7 +62,7 @@ arguments and keyword arguments as you would to any Lisp function.
 
     (users-by-country :country-code "USA")
 
-    (young-users-by-country "GB" "US" :max-age 18)
+    (young-user-names-by-country "GB" "US" :max-age 18)
 
 # Importing
 
