@@ -127,6 +127,14 @@ intended for direct use. Instead, they return templates for use with
           (doplist (k v data)
             (record :key (string k) :value v)))))
 
+## Other languages?
+
+If you want to add another SQL backend to Yesql, I suggest you begin
+by looking over one of the existing implementations.
+The [SQLite integration](sqlite.lisp) is the simplest. Essentially all
+you need to do is to define a package to serve as the language and, in
+that package, create an appropriate binding for `defquery`.
+
 [Yesql]: https://github.com/krisajenkins/yesql
 [syntax]: https://github.com/krisajenkins/yesql#one-file-many-queries
 [Overlord]: https://github.com/TBRSS/overlord
