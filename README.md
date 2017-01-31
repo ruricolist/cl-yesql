@@ -14,7 +14,7 @@ superset of the syntax supported by
 
 CL-Yesql understands more affixes than Clojure’s Yesql does. The
 original understands `fn!` (meaning that the function returns nothing)
-and `fn<!` (meaning that the function should return the last id.)
+and `fn<!` (meaning that the function should return the last id).
 CL-Yesql also understands `fn?` or `fn-p` (meaning that the function
 returns a boolean) and `count-fn` (meaning that the function returns a
 number).
