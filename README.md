@@ -47,12 +47,12 @@ The full list of annotations:
 
 Annotation | Meaning
 ---------- | -------
-@rows      | Default
-@row       | One row
-@values    | One row as multiple values
-@column    | One column
-@single    | A single value
-@execute   | No return value (same as !)
+@rows      | default
+@row       | one row
+@values    | one row as multiple values
+@column    | one column
+@single    | a single value
+@execute   | no return value (same as !)
 @last-id   | ID of the last row inserted (same as <!)
 
 While the exact signature of functions depends on the language
