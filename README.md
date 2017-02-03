@@ -95,6 +95,10 @@ Support for Postgres is provided by the package
 `:cl-yesql/postmodern`. Obviously it builds on the [Postmodern][]
 library.
 
+The Postmodern language implicitly prepares (using
+`postmodern:prepare`) all queries when the Yesql file is loaded. It is
+not necessary to do anything else to prepare them.
+
 ## The SQLite languages
 
 Support for SQLite is provided through two languages, with different
