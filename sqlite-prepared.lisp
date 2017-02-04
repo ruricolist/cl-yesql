@@ -4,6 +4,7 @@
     :cl-yesql :cl-yesql/sqlite-common)
   (:import-from :overlord :simple-module)
   (:import-from :sqlite)
+  (:shadow :read-module)
   (:export
    :yesql-sqlite-prepared
    :with-prepared-statement

@@ -4,6 +4,7 @@
   (:import-from #:pomo #:execute #:prepare)
   (:shadowing-import-from :ppcre :scan)
   (:shadowing-import-from #:pomo #:query)
+  (:shadow #:read-module)
   (:export #:yesql-postmodern #:static-exports
            #:read-module #:module-progn))
 (in-package #:cl-yesql/postmodern)

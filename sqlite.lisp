@@ -3,7 +3,8 @@
     #:cl #:alexandria #:serapeum #:cl-yesql #:sqlite
     :cl-yesql/sqlite-common)
   (:import-from #:overlord #:simple-module)
-  (:export #:yesql-sqlite :read-module :module-progn :static-exports))
+  (:shadow #:read-module)
+  (:export #:yesql-sqlite #:read-module #:module-progn #:static-exports))
 (in-package #:cl-yesql/sqlite)
 
 (defun read-module (source stream)
