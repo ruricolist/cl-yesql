@@ -2,7 +2,7 @@
   (:use #:cl #:alexandria #:serapeum #:cl-yesql)
   (:import-from #:overlord #:simple-module)
   (:import-from #:pomo #:execute #:prepare)
-  (:shadowing-import-from :ppcre :scan)
+  (:shadowing-import-from #:ppcre #:scan)
   (:shadowing-import-from #:pomo #:query)
   (:shadow #:read-module)
   (:export #:yesql-postmodern #:static-exports
