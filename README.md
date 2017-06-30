@@ -74,7 +74,7 @@ At the moment, that looks like this:
     (overlord:import my-queries
       :from "sql/queries.sql"
       :as :cl-yesql/postmodern
-      :binding (:all-as-functions)))
+      :binding :all-as-functions)
 
     ;; Importing individual functions.
     (overlord:import my-queries
