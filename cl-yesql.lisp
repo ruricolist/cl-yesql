@@ -6,6 +6,7 @@
     #:serapeum
     #:cl-yesql/defgrammar)
   (:nicknames #:yesql)
+  (:import-from #:overlord)
   (:export
    #:parse-query
    #:parse-queries
