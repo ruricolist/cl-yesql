@@ -85,6 +85,9 @@ At the moment, that looks like this:
 Note that paths are relative to the base of the system, not the
 current file.
 
+Note also that the `:cl-yesql/postmodern` system must be loaded before
+the above code is compiled.
+
 Overlord is still experimental, however, so the syntax may change.
 
 ## Languages
@@ -92,8 +95,8 @@ Overlord is still experimental, however, so the syntax may change.
 # The Postgres language
 
 Support for Postgres is provided by the package
-`:cl-yesql/postmodern`. Obviously it builds on the [Postmodern][]
-library.
+`:cl-yesql/postmodern`, provided by the system of the same name.
+Obviously it builds on the [Postmodern][] library.
 
 The Postmodern language implicitly prepares (using
 `postmodern:prepare`) all queries when the Yesql file is loaded. It is
@@ -107,7 +110,8 @@ semantics.
 ### Simple SQLite
 
 For querying from an SQLite database, and for discrete inserts and
-updates, the right language to use is `:cl-yesql/sqlite`.
+updates, the right language to use is `:cl-yesql/sqlite`, provided by
+the system of the same name.
 
 Note that (unlike for the Postmodern language) functions exported by
 the SQLite language expect a database handle as their first argument.
@@ -130,6 +134,9 @@ intended for direct use. Instead, they return templates for use with
             (record #'record-kv db)
           (doplist (k v data)
             (record :key (string k) :value v)))))
+
+The language `:cl-yesql/sqlite-prepared` is provided by the package of
+the same name.
 
 ## Other languages?
 
