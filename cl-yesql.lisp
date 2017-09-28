@@ -236,22 +236,16 @@
 (defmethod parse-query ((p pathname))
   (parse-query (read-file-into-string p)))
 
-(defgeneric parse-queries (s)
-  (:method-combination standard/context))
-
-(defmethod parse-queries :context ((s t))
+(defun parse-queries (s)
   (let ((*package* (find-package :cl-yesql-user)))
-    (call-next-method)))
-
-(defmethod parse-queries ((s string))
-  (.parse queries 'queries (ensure-trailing-newline s)))
-
-(defmethod parse-queries ((p pathname))
-  (parse-queries (read-file-into-string p)))
-
-(defmethod parse-queries ((s stream))
-  (assert (input-stream-p s))
-  (parse-queries (read-stream-content-into-string s)))
+    (etypecase s
+      (string
+       (.parse queries 'queries (ensure-trailing-newline s)))
+      (pathname
+       (parse-queries (read-file-into-string s)))
+      (stream
+       (assert (input-stream-p s))
+       (parse-queries (read-stream-content-into-string s))))))
 
 (defun yesql-reader (path stream)
   (declare (ignore path))
