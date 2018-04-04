@@ -80,8 +80,12 @@
 
 (defmethod print-object ((self query) stream)
   (print-unreadable-object (self stream :type t)
-    (with-slots (name annotation statement) self
-      (format stream "~s ~s ~s" name annotation statement))))
+    (with-slots (name annotation statement docstring) self
+      (format stream "~s ~s ~s~@[ ~s~]"
+              name
+              annotation
+              statement
+              docstring))))
 
 (defun query-id (q)
   (lispify-sql-id (query-name q)))
@@ -104,7 +108,7 @@
 
   (defrule docstring (+ comment)
     (:lambda (comments)
-      (trim-whitespace (text comments))))
+      (trim-whitespace (string-join comments #\Newline))))
 
   (defrule statement (and line (* (or line comment)))
     (:lambda (lines)
@@ -142,7 +146,9 @@
            (! name-tag)
            (* (and non-whitespace (? whitespace)))
            newline)
-    (:constant nil))
+    (:lambda (args)
+      (trim-whitespace
+       (text (rest args)))))
 
   (defrule line
       (and (? whitespace)
