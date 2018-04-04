@@ -1,13 +1,18 @@
 (defpackage #:cl-yesql/postmodern
   (:use #:cl #:alexandria #:serapeum #:cl-yesql)
   (:import-from #:overlord #:simple-module)
-  (:import-from #:pomo #:execute #:prepare)
+  (:import-from #:pomo #:execute #:prepare #:*database*)
   (:shadowing-import-from #:ppcre #:scan)
   (:shadowing-import-from #:pomo #:query)
   (:shadow #:read-module)
   (:export #:yesql-postmodern #:static-exports
            #:read-module #:module-progn))
 (in-package #:cl-yesql/postmodern)
+
+(defun check-connection ()
+  (loop until *database* do
+    (cerror "Check again"
+            "There is no database connection.")))
 
 (defun read-module (source stream)
   `(module-progn
@@ -21,6 +26,7 @@
 (defmacro defquery (name args &body (docstring query))
   `(defun ,name ,args
      ,docstring
+     (check-connection)
      ,(query-body query)))
 
 (defun static-exports (source)
