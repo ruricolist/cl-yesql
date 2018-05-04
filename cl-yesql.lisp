@@ -88,7 +88,7 @@
   (apply #'make 'query args))
 
 (defmethod statement-vars ((s string))
-  (parse 'statement s))
+  (statement-vars (parse 'statement s)))
 
 (defun parse-statement (s)
   (let* ((statement (parse 'statement s))
