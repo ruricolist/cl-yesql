@@ -59,7 +59,7 @@
   (loop for i from 0 to 50 collect (intern (fmt "?~a" i))))
 
 (defun positional-arg? (arg)
-  (member arg *positional-args*))
+  (memq arg *positional-args*))
 
 (defmethod statement-vars ((statement list))
   (mvlet* ((symbols (filter #'symbolp statement))
