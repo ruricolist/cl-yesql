@@ -2,7 +2,7 @@
 
 (defpackage #:cl-yesql
   (:use #:cl #:alexandria #:serapeum
-    #:cl-yesql/queries
+    #:cl-yesql/queryfile
     #:cl-yesql/statement)
   (:nicknames #:yesql)
   (:import-from #:overlord)

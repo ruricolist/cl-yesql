@@ -1,5 +1,5 @@
-(defpackage :cl-yesql/queries
-  (:documentation "Parser for queries.")
+(defpackage :cl-yesql/queryfile
+  (:documentation "Parser for query files.")
   (:use :cl :alexandria :serapeum :esrap)
   (:shadow :comment :whitespace)
   (:shadowing-import-from :cl-yesql/defrule
@@ -10,7 +10,7 @@
    :name
    :annotations
    :annotation))
-(in-package :cl-yesql/queries)
+(in-package :cl-yesql/queryfile)
 
 (defconst annotations
   '(:rows :row :values :column :single :execute :last-id))
