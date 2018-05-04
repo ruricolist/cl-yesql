@@ -55,11 +55,12 @@
       (string (setf (query-statement self) (parse-statement statement)))
       (list statement))))
 
-(defvar *positional-args*
-  (loop for i from 0 to 50 collect (intern (fmt "?~a" i))))
+(defconst positional-args
+  (loop for i from 0 to 50
+        collect (intern (fmt "?~a" i) :cl-yesql)))
 
 (defun positional-arg? (arg)
-  (memq arg *positional-args*))
+  (memq arg positional-args))
 
 (defmethod statement-vars ((statement list))
   (mvlet* ((symbols (filter #'symbolp statement))
@@ -92,7 +93,7 @@
 
 (defun parse-statement (s)
   (let* ((statement (parse 'statement s))
-         (positional *positional-args*))
+         (positional positional-args))
     (loop for part in statement
           if (eql part :?)
             collect (pop positional)
