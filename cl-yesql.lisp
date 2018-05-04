@@ -91,7 +91,7 @@
   (parse 'statement s))
 
 (defun parse-statement (s)
-  (let* ((statement (flatten (parse 'statement s)))
+  (let* ((statement (parse 'statement s))
          (positional *positional-args*))
     (loop for part in statement
           if (eql part :?)

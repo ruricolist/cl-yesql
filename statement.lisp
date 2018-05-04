@@ -16,7 +16,9 @@
       (intern package)))
 
 (defrule statement
-    (and substatement (* (and parameter substatement))))
+    (and substatement (* (and parameter substatement)))
+  (:lambda (s)
+    (flatten s)))
 
 (defrule substatement
     (* (or (or (+ (not (or #\? #\: #\')))
