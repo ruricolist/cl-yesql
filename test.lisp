@@ -179,3 +179,14 @@ FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
     ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('p','u','x'))
 WHERE c.oid = :oid AND c.oid = i.indrelid AND i.indexrelid = c2.oid
 ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname"))))
+
+(test affix-beats-annotation
+  "Check that an affix beats an annotation.
+This documents the current behavior; however, it might be better the
+other way around."
+  (is (eql :execute
+           (query-annotation
+            (parse-query
+             (trim-whitespace "
+-- name: count-xs! @column
+select * from xs"))))))
