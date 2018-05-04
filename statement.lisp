@@ -6,7 +6,8 @@
     :defrule)
   (:export
    :statement
-   :lispify-sql-id))
+   :lispify-sql-id
+   :whitelist-parameter))
 (in-package :cl-yesql/statement)
 
 (defun lispify-sql-id (id &key (package *package*))
@@ -26,6 +27,19 @@
            string))
   (:text t))
 
+(defrule whitelist
+    (and (and #\{ (* whitespace))
+         (* whitelist-item)
+         (and (* whitespace) #\}))
+  (:function second))
+
+(defrule whitelist-item
+    (and (* whitespace)
+         (+ (not (or whitespace #\, #\})))
+         (and (* whitespace) (? #\,)))
+  (:lambda (m)
+    (text (second m))))
+
 (defrule string
     (and string-delimiter
          (* (or string-normal string-special))
@@ -41,8 +55,14 @@
   (:function second))
 
 (defrule parameter
+    (or whitelist-parameter simple-parameter))
+
+(defrule simple-parameter
     (or placeholder-parameter
         named-parameter))
+
+(defrule whitelist-parameter
+    (and parameter (? whitelist)))
 
 (defrule placeholder-parameter "?"
   (:constant ':?))
@@ -51,7 +71,7 @@
     (and ":"
          (+ (not
              #.`(or whitespace newline
-                    ,@(coerce ",\"':&;()|=+\-*%/\\<>^" 'list)))))
+                    ,@(coerce "{},\"':&;()|=+\-*%/\\<>^" 'list)))))
   (:lambda (args)
     (lispify-sql-id (string-upcase (text (second args))))))
 

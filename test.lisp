@@ -1,6 +1,12 @@
 (defpackage :cl-yesql/test
   (:use :cl :alexandria :serapeum :fiveam :cl-yesql)
   (:import-from :trivia :match)
+  (:import-from :cl-yesql/statement
+    :whitelist
+    :whitelist-parameter)
+  (:import-from :cl-yesql/queryfile
+    :query)
+  (:import-from :esrap :parse)
   (:export :run-tests))
 (in-package :cl-yesql/test)
 
@@ -190,3 +196,41 @@ other way around."
              (trim-whitespace "
 -- name: count-xs! @column
 select * from xs"))))))
+
+(test whitelist
+  (is (equal nil (parse 'whitelist "{}")))
+  (is (equal nil (parse 'whitelist "{ }")))
+  (is (equal '("x") (parse 'whitelist "{x}")))
+  (is (equal '("x") (parse 'whitelist "{ x}")))
+  (is (equal '("x") (parse 'whitelist "{x }")))
+  (is (equal '("x") (parse 'whitelist "{x,}")))
+  (is (equal '("x") (parse 'whitelist "{ x,}")))
+  (is (equal '("x") (parse 'whitelist "{ x, }")))
+  (is (equal '("x" "y") (parse 'whitelist "{x,y}")))
+  (is (equal '("x" "y") (parse 'whitelist "{x,y,}")))
+  (is (equal '("x" "y") (parse 'whitelist "{x,y,}")))
+  (is (equal '("x" "y") (parse 'whitelist "{x,y,}")))
+  (is (equal '("x" "y" "z") (parse 'whitelist "{x,y,z}")))
+  (is (equal '("x" "y" "z") (parse 'whitelist "{x, y, z}")))
+  (is (equal '("x" "y" "z") (parse 'whitelist "{x , y , z}"))))
+
+(test whitelist-parameter
+  (is (equal '(:? nil) (parse 'whitelist-parameter "?")))
+  (is (equal '(foo nil) (parse 'whitelist-parameter ":foo")))
+
+  (is (equal '(:? ("x")) (parse 'whitelist-parameter "?{x}")))
+  (signals error
+    (parse 'whitelist-parameter "? {x}"))
+
+  (is (equal '(foo ("x")) (parse 'whitelist-parameter ":foo{x}")))
+  (signals error
+    (parse 'whitelist-parameter ":foo {x}")))
+
+(test parse-statement-with-whitelist
+  (finishes
+    (parse-query
+     (trim-whitespace
+      "
+-- name: player-row
+SELECT * from player
+ WHERE ?{player_name, email, display_name} = ?"))))
