@@ -3,7 +3,8 @@
   (:import-from :trivia :match)
   (:import-from :cl-yesql/statement
     :whitelist
-    :whitelist-parameter)
+    :whitelist-parameter
+    :placeholder)
   (:import-from :cl-yesql/queryfile
     :query)
   (:import-from :esrap :parse)
@@ -215,10 +216,10 @@ select * from xs"))))))
   (is (equal '("x" "y" "z") (parse 'whitelist "{x , y , z}"))))
 
 (test whitelist-parameter
-  (is (equal '(:? nil) (parse 'whitelist-parameter "?")))
+  (is (equal `(,placeholder nil) (parse 'whitelist-parameter "?")))
   (is (equal '(foo nil) (parse 'whitelist-parameter ":foo")))
 
-  (is (equal '(:? ("x")) (parse 'whitelist-parameter "?{x}")))
+  (is (equal `(,placeholder ("x")) (parse 'whitelist-parameter "?{x}")))
   (signals error
     (parse 'whitelist-parameter "? {x}"))
 

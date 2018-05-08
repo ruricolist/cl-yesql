@@ -5,10 +5,13 @@
   (:shadowing-import-from :cl-yesql/defrule
     :defrule)
   (:export
+   :placeholder
    :statement
    :lispify-sql-id
    :whitelist-parameter))
 (in-package :cl-yesql/statement)
+
+(defunit placeholder)
 
 (defun lispify-sql-id (id &key (package *package*))
   (~> id
@@ -65,7 +68,7 @@
     (and parameter (? whitelist)))
 
 (defrule placeholder-parameter "?"
-  (:constant ':?))
+  (:constant placeholder))
 
 (defrule named-parameter
     (and ":"

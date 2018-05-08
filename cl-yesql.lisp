@@ -95,7 +95,7 @@
   (let* ((statement (parse 'statement s))
          (positional positional-args))
     (loop for part in statement
-          if (eql part :?)
+          if (eql part placeholder)
             collect (pop positional)
           else collect part)))
 
