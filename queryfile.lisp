@@ -7,6 +7,11 @@
   (:export
    :queries
    :query
+   :query-name
+   :query-annotation
+   :query-docstring
+   :query-statement
+   :copy-query
    :name
    :annotations
    :annotation))
@@ -18,17 +23,37 @@
 (deftype annotation ()
   `(member ,@annotations))
 
+(defconstructor query
+  (name string)
+  (annotation annotation)
+  (docstring string)
+  (statement (or string list)))
+
+(defun name-affix (name)
+  (assure (or null annotation)
+    (cond ((string$= "!" name) :execute)
+          ((string$= "<!" name) :last-id)
+          ((string^= "count-" name) :single)
+          ((or (string$= "-p" name)
+               (string$= "?" name))
+           :single)
+          (t nil))))
+
 (defrule queries (and (* blank-line) (* query))
   (:function second))
+
+(defconst no-docs
+  "No docs.")
 
 (defrule query (and name (? docstring) statement)
   (:destructure (name docstring statement)
                 (destructuring-bind (name . annotation) name
-                  (list
-                   :annotation annotation
-                   :name (text name)
-                   :docstring docstring
-                   :statement statement))))
+                  (query name
+                         (or annotation
+                             (name-affix name)
+                             :rows)
+                         (or docstring no-docs)
+                         statement))))
 
 (defrule docstring (+ comment)
   (:lambda (comments)
@@ -41,13 +66,14 @@
 (defrule annotation (and (? whitespace)
                          "@" #.`(or ,@(mapcar #'string-downcase annotations)))
   (:lambda (args)
-    (string-ecase (third args)
-      ("single" :single)
-      ("row" :row)
-      ("rows" :rows)
-      ("column" :column)
-      ("execute" :execute)
-      ("last-id" :last-id))))
+    (assure annotation
+      (string-ecase (third args)
+        ("single" :single)
+        ("row" :row)
+        ("rows" :rows)
+        ("column" :column)
+        ("execute" :execute)
+        ("last-id" :last-id)))))
 
 (defrule name
     (and (and (? whitespace)
@@ -60,7 +86,7 @@
          (and (? whitespace) newline))
   (:lambda (args)
     (let ((name (second args))
-          (annotation (or (third args) :rows)))
+          (annotation (third args)))
       (cons name annotation))))
 
 (defrule comment

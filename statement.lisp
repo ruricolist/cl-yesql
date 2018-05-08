@@ -8,10 +8,16 @@
    :placeholder
    :statement
    :lispify-sql-id
-   :whitelist-parameter))
+   :parameter
+   :parameter-var
+   :parameter-whitelist))
 (in-package :cl-yesql/statement)
 
 (defunit placeholder)
+
+(defconstructor parameter
+  (var (or symbol placeholder))
+  (whitelist list))
 
 (defun lispify-sql-id (id &key (package *package*))
   (~> id
@@ -21,8 +27,7 @@
 
 (defrule statement
     (and substatement (* (and parameter substatement)))
-  (:lambda (s)
-    (flatten s)))
+  (:function flatten))
 
 (defrule substatement
     (* (or (or (+ (not (or #\? #\: #\')))
@@ -65,7 +70,9 @@
         named-parameter))
 
 (defrule whitelist-parameter
-    (and simple-parameter (? whitelist)))
+    (and simple-parameter (? whitelist))
+  (:lambda (args)
+    (apply #'parameter args)))
 
 (defrule placeholder-parameter "?"
   (:constant placeholder))

@@ -18,6 +18,7 @@
    #:query-docstring
    #:query-statement
    #:query-vars #:query-args
+   #:query-dispatch
 
    #:yesql-static-exports
 
@@ -32,20 +33,8 @@
 
 ;;; "cl-yesql" goes here. Hacks and glory await!
 
-(defclass query ()
-  ((name :initarg :name :type string :reader query-name)
-   (annotation :initarg :annotation :type annotation :reader query-annotation)
-   (docstring :type string :reader query-docstring
-              :initarg :docstring)
-   (statement :type (or string list) :initarg :statement
-              :reader query-statement))
-  (:default-initargs
-   :statement (required-argument 'statement)
-   :name (required-argument 'name)
-   :annotation :rows))
-
-(defmethod query-vars ((self query))
-  (statement-vars (query-statement self)))
+(defun query-vars (query)
+  (statement-vars (query-statement query)))
 
 (defconst positional-args
   (loop for i from 0 to 50
@@ -54,44 +43,31 @@
 (defun positional-arg? (arg)
   (memq arg positional-args))
 
-(defmethod statement-vars ((statement list))
-  (mvlet* ((symbols (filter #'symbolp statement))
-           (positional keywords (partition #'positional-arg? symbols)))
-    (assert (equal positional (nub positional)))
-    (append positional (nub keywords))))
+(defun handle-placeholders (statement)
+  (let ((positionals positional-args))
+    (mapcar
+     (lambda (elt)
+       (match elt
+         ((parameter (and _ (type placeholder)) whitelist)
+          (let ((var (pop positionals)))
+            (parameter var whitelist)))
+         (otherwise elt)))
+     statement)))
+
+(defgeneric statement-vars (s)
+  (:method ((s string))
+    (statement-vars (parse 'statement s)))
+  (:method ((statement list))
+    (mvlet* ((parameters (filter (of-type 'parameter) statement))
+             (symbols (mapcar #'parameter-var parameters))
+             (positional keywords (partition #'positional-arg? symbols)))
+      (assert (equal positional (nub positional)))
+      (append positional (nub keywords)))))
 
 (defconst no-docs "No docs.")
 
-(defun make-query (&rest args &key docstring statement &allow-other-keys)
-  (apply #'make 'query
-         :docstring (or docstring no-docs)
-         :statement (etypecase statement
-                      (list statement)
-                      (string (parse-statement statement)))
-         (remove-from-plist args :docstring :statement)))
-
-(defmethod print-object ((self query) stream)
-  (print-unreadable-object (self stream :type t)
-    (with-slots (name annotation statement docstring) self
-      (format stream "~s ~s ~s~@[ ~s~]"
-              name
-              annotation
-              statement
-              docstring))))
-
 (defun query-id (q)
   (lispify-sql-id (query-name q)))
-
-(defmethod statement-vars ((s string))
-  (statement-vars (parse 'statement s)))
-
-(defun parse-statement (s)
-  (let* ((statement (parse 'statement s))
-         (positional positional-args))
-    (loop for part in statement
-          if (eql part placeholder)
-            collect (pop positional)
-          else collect part)))
 
 (defun print-sql (x s)
   (if (listp x)
@@ -102,8 +78,12 @@
       (prin1 x s)))
 
 (defmethod parse-query ((s string))
-  (apply #'make-query
-         (parse 'query (ensure-trailing-newline s))))
+  (let* ((query (parse 'query (ensure-trailing-newline s)))
+         (statement (query-statement query)))
+    (copy-query query
+                :statement
+                (handle-placeholders
+                 (parse 'statement statement)))))
 
 (defmethod parse-query ((p pathname))
   (parse-query (read-file-into-string p)))
@@ -112,8 +92,7 @@
   (let ((*package* (find-package :cl-yesql-user)))
     (etypecase s
       (string
-       (mapply #'make-query
-               (parse 'queries (ensure-trailing-newline s))))
+       (parse 'queries (ensure-trailing-newline s)))
       (pathname
        (parse-queries (read-file-into-string s)))
       (stream
@@ -147,19 +126,6 @@
     (assert (equal args (nub args)))
     args))
 
-(defun query-affix (q)
-  (let ((name (query-name q)))
-    (cond ((string$= "!" name) :execute)
-          ((string$= "<!" name) :last-id)
-          ((string^= "count-" name) :single)
-          ((or (string$= "-p" name)
-               (string$= "?" name))
-           :single)
-          (t nil))))
-
-(defmethod query-annotation :around ((self query))
-  (or (query-affix self) (call-next-method)))
-
 (defun yesql-static-exports (file)
   #+ () (mapcar #'query-id (parse-queries file))
   ;; Should this just be a regex?
@@ -171,3 +137,21 @@
                        (parse 'name (concat line #.(string #\Newline)))))
           when name
             collect (lispify-sql-id name :package :keyword))))
+
+;; (defmacro query-whitelist-dispatch (query macro)
+;;   (expand-query-whitelist-dispatch query macro))
+
+;; (defun expand-query-whitelist-dispatch (query macro)
+;;   (let* ((statement (query-statement query))
+;;          (parameters (filter (of-type 'parameter) statement)))
+;;     (if (every (op (null (parameter-whitelist _))) parameters)
+;;         `(,macro ,query)
+;;         (let* ((param (first parameters))
+;;                (var (parameter-var param)))
+;;           `(string-case ,var
+;;              ,@(loop for string in (parameter-whitelist var)
+;;                      collect `(,string
+;;                                ,(expand-query-whitelist-dispatch
+;;                                  (copy-query query
+;;                                              :statement (substitute string param statement :count 1))
+;;                                  macro))))))))

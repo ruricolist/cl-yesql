@@ -4,9 +4,10 @@
   (:import-from :cl-yesql/statement
     :whitelist
     :whitelist-parameter
+    :parameter
+    :parameter-var
+    :parameter-whitelist
     :placeholder)
-  (:import-from :cl-yesql/queryfile
-    :query)
   (:import-from :esrap :parse)
   (:export :run-tests))
 (in-package :cl-yesql/test)
@@ -187,11 +188,9 @@ FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
 WHERE c.oid = :oid AND c.oid = i.indrelid AND i.indexrelid = c2.oid
 ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname"))))
 
-(test affix-beats-annotation
-  "Check that an affix beats an annotation.
-This documents the current behavior; however, it might be better the
-other way around."
-  (is (eql :execute
+(test annotation-beats-affix
+  "Check that an annotation beats an affix."
+  (is (eql :column
            (query-annotation
             (parse-query
              (trim-whitespace "
@@ -215,15 +214,20 @@ select * from xs"))))))
   (is (equal '("x" "y" "z") (parse 'whitelist "{x, y, z}")))
   (is (equal '("x" "y" "z") (parse 'whitelist "{x , y , z}"))))
 
-(test whitelist-parameter
-  (is (equal `(,placeholder nil) (parse 'whitelist-parameter "?")))
-  (is (equal '(foo nil) (parse 'whitelist-parameter ":foo")))
+(defun whitelist= (list parse)
+  (equal list
+         (list (parameter-var parse)
+               (parameter-whitelist parse))))
 
-  (is (equal `(,placeholder ("x")) (parse 'whitelist-parameter "?{x}")))
+(test whitelist-parameter
+  (is (whitelist= `(,placeholder nil) (parse 'whitelist-parameter "?")))
+  (is (whitelist= '(foo nil) (parse 'whitelist-parameter ":foo")))
+
+  (is (whitelist= `(,placeholder ("x")) (parse 'whitelist-parameter "?{x}")))
   (signals error
     (parse 'whitelist-parameter "? {x}"))
 
-  (is (equal '(foo ("x")) (parse 'whitelist-parameter ":foo{x}")))
+  (is (whitelist= '(foo ("x")) (parse 'whitelist-parameter ":foo{x}")))
   (signals error
     (parse 'whitelist-parameter ":foo {x}")))
 
