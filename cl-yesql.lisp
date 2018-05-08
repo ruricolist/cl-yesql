@@ -6,6 +6,8 @@
     #:cl-yesql/statement)
   (:nicknames #:yesql)
   (:import-from #:overlord)
+  (:import-from #:trivia
+    #:match)
   (:import-from #:esrap
     #:parse)
   (:export
@@ -138,20 +140,55 @@
           when name
             collect (lispify-sql-id name :package :keyword))))
 
-;; (defmacro query-whitelist-dispatch (query macro)
-;;   (expand-query-whitelist-dispatch query macro))
+(defmacro query-whitelist-dispatch (query macro)
+  (expand-query-whitelist-dispatch query macro))
 
-;; (defun expand-query-whitelist-dispatch (query macro)
-;;   (let* ((statement (query-statement query))
-;;          (parameters (filter (of-type 'parameter) statement)))
-;;     (if (every (op (null (parameter-whitelist _))) parameters)
-;;         `(,macro ,query)
-;;         (let* ((param (first parameters))
-;;                (var (parameter-var param)))
-;;           `(string-case ,var
-;;              ,@(loop for string in (parameter-whitelist var)
-;;                      collect `(,string
-;;                                ,(expand-query-whitelist-dispatch
-;;                                  (copy-query query
-;;                                              :statement (substitute string param statement :count 1))
-;;                                  macro))))))))
+(defcondition string-not-in-whitelist (error)
+  ((string :initarg :string :type string)
+   (whitelist :initarg :whitelist :type whitelist))
+  (:report (lambda (c s)
+             (with-slots (string whitelist) c
+               (format s "String ~s is not in whitelist ~s."
+                       string whitelist)))))
+
+(defun invalid-string (string whitelist)
+  (error 'string-not-in-whitelist
+         :string string
+         :whitelist whitelist))
+
+(defmacro query-dispatch ((var query) &body body)
+  (expand-query-whitelist-dispatch query
+                                   (lambda (q)
+                                     (check-query-expanded q)
+                                     `(let ((,var ,q))
+                                        ,@body))))
+
+(defun check-query-expanded (query)
+  (unless (loop for elt in (query-statement query)
+                always (or (stringp elt)
+                           (null (parameter-whitelist elt))))
+    (error "Query has not been interpolated:~%~a" query)))
+
+(defun expand-query-whitelist-dispatch (query cont)
+  (let* ((statement (assure list (query-statement query))))
+    (fbindrec
+        (cont
+         (rec
+          (lambda (q s)
+            (match s
+              (() (cont q))
+              ((list* (parameter _ (list))
+                      s)
+               (rec q s))
+              ((list* (and param (parameter var whitelist))
+                      s)
+               `(string-case ,var
+                  ,@(loop for string in whitelist
+                          for stat = (substitute string param statement :count 1)
+                          collect `(,string
+                                    ,(rec
+                                      (copy-query query :statement stat)
+                                      s)))
+                  (t (invalid-string ,var ',whitelist))))
+              (otherwise (rec q (rest s)))))))
+      (rec query statement))))
