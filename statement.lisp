@@ -65,7 +65,7 @@
         named-parameter))
 
 (defrule whitelist-parameter
-    (and parameter (? whitelist)))
+    (and simple-parameter (? whitelist)))
 
 (defrule placeholder-parameter "?"
   (:constant placeholder))

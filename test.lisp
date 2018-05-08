@@ -227,6 +227,11 @@ select * from xs"))))))
   (signals error
     (parse 'whitelist-parameter ":foo {x}")))
 
+(test whitelist-parameter-not-recursive
+  "Whitelist parameters should not be recursive."
+  (signals error
+    (parse 'whitelist-parameter "?{x}{y}")))
+
 (test parse-statement-with-whitelist
   (finishes
     (parse-query
