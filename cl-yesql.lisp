@@ -35,25 +35,17 @@
 (defclass query ()
   ((name :initarg :name :type string :reader query-name)
    (annotation :initarg :annotation :type annotation :reader query-annotation)
-   (docstring :type string :accessor query-docstring)
+   (docstring :type string :reader query-docstring
+              :initarg :docstring)
    (statement :type (or string list) :initarg :statement
-              :accessor query-statement)
-   (vars :type list :accessor query-vars))
+              :reader query-statement))
   (:default-initargs
    :statement (required-argument 'statement)
    :name (required-argument 'name)
    :annotation :rows))
 
-(defmethod slot-unbound (class (self query) (slot (eql 'vars)))
-  (declare (ignore class))
-  (setf (slot-value self 'vars)
-        (statement-vars (query-statement self))))
-
-(defmethod query-statement :around ((self query))
-  (let ((statement (call-next-method)))
-    (etypecase statement
-      (string (setf (query-statement self) (parse-statement statement)))
-      (list statement))))
+(defmethod query-vars ((self query))
+  (statement-vars (query-statement self)))
 
 (defconst positional-args
   (loop for i from 0 to 50
@@ -68,10 +60,15 @@
     (assert (equal positional (nub positional)))
     (append positional (nub keywords))))
 
-(defmethod initialize-instance :after ((self query)
-                                       &key docstring
-                                       &allow-other-keys)
-  (setf (query-docstring self) (or docstring "No docs.")))
+(defconst no-docs "No docs.")
+
+(defun make-query (&rest args &key docstring statement &allow-other-keys)
+  (apply #'make 'query
+         :docstring (or docstring no-docs)
+         :statement (etypecase statement
+                      (list statement)
+                      (string (parse-statement statement)))
+         (remove-from-plist args :docstring :statement)))
 
 (defmethod print-object ((self query) stream)
   (print-unreadable-object (self stream :type t)
@@ -84,9 +81,6 @@
 
 (defun query-id (q)
   (lispify-sql-id (query-name q)))
-
-(defun make-query (&rest args)
-  (apply #'make 'query args))
 
 (defmethod statement-vars ((s string))
   (statement-vars (parse 'statement s)))
