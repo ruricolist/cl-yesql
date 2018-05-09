@@ -38,24 +38,6 @@
 (defun query-vars (query)
   (statement-vars (query-statement query)))
 
-(defconst positional-args
-  (loop for i from 0 to 50
-        collect (intern (fmt "?~a" i) :cl-yesql)))
-
-(defun positional-arg? (arg)
-  (memq arg positional-args))
-
-(defun handle-placeholders (statement)
-  (let ((positionals positional-args))
-    (mapcar
-     (lambda (elt)
-       (match elt
-         ((parameter (and _ (type placeholder)) whitelist)
-          (let ((var (pop positionals)))
-            (parameter var whitelist)))
-         (otherwise elt)))
-     statement)))
-
 (defgeneric statement-vars (s)
   (:method ((s string))
     (statement-vars (parse 'statement s)))
@@ -84,8 +66,7 @@
          (statement (query-statement query)))
     (copy-query query
                 :statement
-                (handle-placeholders
-                 (parse 'statement statement)))))
+                (parse 'statement statement))))
 
 (defmethod parse-query ((p pathname))
   (parse-query (read-file-into-string p)))

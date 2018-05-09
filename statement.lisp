@@ -4,13 +4,15 @@
   (:shadow :comment :whitespace :string)
   (:shadowing-import-from :cl-yesql/defrule
     :defrule)
+  (:import-from :trivia :match)
   (:export
    :placeholder
    :statement
    :lispify-sql-id
    :parameter
    :parameter-var
-   :parameter-whitelist))
+   :parameter-whitelist
+   :positional-arg?))
 (in-package :cl-yesql/statement)
 
 (defunit placeholder)
@@ -18,6 +20,24 @@
 (defconstructor parameter
   (var (or symbol placeholder))
   (whitelist list))
+
+(defconst positional-args
+  (loop for i from 0 to 50
+        collect (intern (fmt "?~a" i) #.*package*)))
+
+(defun positional-arg? (arg)
+  (memq arg positional-args))
+
+(defun handle-placeholders (statement)
+  (let ((positionals positional-args))
+    (mapcar
+     (lambda (elt)
+       (match elt
+         ((parameter (and _ (type placeholder)) whitelist)
+          (let ((var (pop positionals)))
+            (parameter var whitelist)))
+         (otherwise elt)))
+     statement)))
 
 (defun lispify-sql-id (id &key (package *package*))
   (~> id
@@ -27,7 +47,10 @@
 
 (defrule statement
     (and substatement (* (and parameter substatement)))
-  (:function flatten))
+  (:lambda (tree)
+    (~> tree
+        flatten
+        handle-placeholders)))
 
 (defrule substatement
     (* (or (or (+ (not (or #\? #\: #\')))
