@@ -12,7 +12,8 @@
    :parameter
    :parameter-var
    :parameter-whitelist
-   :positional-arg?))
+   :positional-arg?
+   :too-many-placeholders))
 (in-package :cl-yesql/statement)
 
 (defunit placeholder)
@@ -28,22 +29,42 @@
 (defun positional-arg? (arg)
   (memq arg positional-args))
 
-(defun handle-placeholders (statement)
-  (let ((positionals positional-args))
-    (mapcar
-     (lambda (elt)
-       (match elt
-         ((parameter (and _ (type placeholder)) whitelist)
-          (let ((var (pop positionals)))
-            (parameter var whitelist)))
-         (otherwise elt)))
-     statement)))
+(defun handle-placeholders (orig-statement)
+  (nlet rec ((statement orig-statement)
+             (positionals positional-args)
+             (acc '()))
+    (cond ((endp statement)
+           (nreverse acc))
+          ((endp positionals)
+           (error 'too-many-placeholders
+                  :statement orig-statement))
+          ((and (typep (first statement) 'parameter)
+                (typep (parameter-var (first statement))
+                       'placeholder))
+           (rec (rest statement)
+                (rest positionals)
+                (cons (parameter (first positionals)
+                                 (parameter-whitelist
+                                  (first statement)))
+                      acc)))
+          (t
+           (rec (rest statement)
+                positionals
+                (cons (first statement) acc))))))
 
 (defun lispify-sql-id (id &key (package *package*))
   (~> id
       (substitute #\- #\_ _)
       string-upcase
       (intern package)))
+
+(defcondition too-many-placeholders (error)
+  ((statement :initarg :statement))
+  (:report (lambda (c s)
+             (with-slots (statement) c
+               (format s "Too many (>~a) positional arguments in ~a."
+                       (length positional-args)
+                       statement)))))
 
 (defrule statement
     (and substatement (* (and parameter substatement)))

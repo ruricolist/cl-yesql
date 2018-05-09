@@ -7,7 +7,9 @@
     :parameter
     :parameter-var
     :parameter-whitelist
-    :placeholder)
+    :placeholder
+    :statement
+    :too-many-placeholders)
   (:import-from :esrap :parse)
   (:export :run-tests))
 (in-package :cl-yesql/test)
@@ -134,9 +136,9 @@ SELECT TRUE
 
 (test positional-and-keyword-args
   "Mixing positional and keyword args should work."
-  (let* ((query (parse-query young-user-names-by-country))
-         (args (query-args query)))
-    (is-true
+  (is-true
+   (let* ((query (parse-query young-user-names-by-country))
+          (args (query-args query)))
      (match args
        ((list _ _ '&key (list _ (list 'required-argument _)))
         t)))))
@@ -244,3 +246,8 @@ select * from xs"))))))
 -- name: player-row
 SELECT * from player
  WHERE ?{player_name, email, display_name} = ?"))))
+
+(test too-many-placeholders
+  (signals too-many-placeholders
+    (parse 'statement
+           (repeat-sequence "? " 51))))
