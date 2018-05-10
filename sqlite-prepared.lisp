@@ -30,8 +30,8 @@
      ,docstring
      ,(build-query-tree
        (lambda (q)
-         (values ,(query-string q)
-                 ,(query-thunk q))))))
+         `(values ,(query-string q)
+                  ,(query-thunk q))))))
 
 (defvar *prepared-query*)
 (defvar *prepared-db*)
