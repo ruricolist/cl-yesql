@@ -27,7 +27,10 @@
   `(defun ,name ,args
      ,docstring
      (check-connection)
-     ,(query-body query)))
+     ,(build-query-tree
+       query
+       (lambda (q)
+         (query-body q)))))
 
 (defun static-exports (source)
   (yesql-static-exports source))
@@ -49,9 +52,6 @@
         (statement (query-string query)))
     `(funcall (load-time-value (pomo:prepare ,statement ,style))
               ,@vars)))
-
-(defun var-offset (q var)
-  (1+ (position var (query-vars q))))
 
 (defun sanity-check-fragment (fragment)
   (when (scan "\\$\\d+" fragment)

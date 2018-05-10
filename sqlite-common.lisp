@@ -1,10 +1,8 @@
 (defpackage :cl-yesql/sqlite-common
   (:use :cl :cl-yesql)
+  (:import-from :cl-yesql/statement :parameter-var)
   (:export :query-string :var-offset))
 (in-package :cl-yesql/sqlite-common)
-
-(defun var-offset (q var)
-  (1+ (position var (query-vars q))))
 
 (defun query-string (q)
   (with-output-to-string (s)

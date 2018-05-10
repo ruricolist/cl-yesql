@@ -48,6 +48,13 @@ WHERE (
 )
 AND age < :max_age"))
 
+(def whitelist-query
+  (trim-whitespace
+   "
+-- name: player-row
+SELECT * from player
+ WHERE ?{player_name, email, display_name} = ?"))
+
 (test parsing-finishes
   (finishes (parse-query users-by-country))
   (finishes (parse-query user-count))
@@ -239,15 +246,24 @@ select * from xs"))))))
     (parse 'whitelist-parameter "?{x}{y}")))
 
 (test parse-statement-with-whitelist
-  (finishes
-    (parse-query
-     (trim-whitespace
-      "
--- name: player-row
-SELECT * from player
- WHERE ?{player_name, email, display_name} = ?"))))
+  (finishes (parse-query whitelist-query)))
 
 (test too-many-placeholders
   (signals too-many-placeholders
     (parse 'statement
            (repeat-sequence "? " 51))))
+
+(test build-tree-with-whitelist
+  (is
+   (equal
+    (build-query-tree
+     (parse-query whitelist-query)
+     (lambda (q)
+       (list 'quote (query-vars q))))
+    `(string-case cl-yesql/statement::?0
+       ("player_name"
+        '(cl-yesql/statement::?1))
+       ("email"
+        '(cl-yesql/statement::?1))
+       ("display_name"
+        '(cl-yesql/statement::?1))))))

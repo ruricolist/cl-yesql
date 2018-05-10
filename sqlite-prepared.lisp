@@ -28,8 +28,10 @@
   (declare (ignore args))
   `(defun ,name ()
      ,docstring
-     (values ,(query-string query)
-             ,(query-thunk query))))
+     ,(build-query-tree
+       (lambda (q)
+         (values ,(query-string q)
+                 ,(query-thunk q))))))
 
 (defvar *prepared-query*)
 (defvar *prepared-db*)

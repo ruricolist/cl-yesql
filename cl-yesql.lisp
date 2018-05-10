@@ -19,8 +19,8 @@
    #:annotation #:query-annotation
    #:query-docstring
    #:query-statement
-   #:query-vars #:query-args
-   #:query-dispatch
+   #:query-vars #:var-offset #:query-args
+   #:build-query-tree
 
    #:yesql-static-exports
 
@@ -37,6 +37,10 @@
 
 (defun query-vars (query)
   (statement-vars (query-statement query)))
+
+(defun var-offset (q param)
+  (let ((var (parameter-var param)))
+    (1+ (position var (query-vars q)))))
 
 (defgeneric statement-vars (s)
   (:method ((s string))
@@ -137,39 +141,29 @@
          :string string
          :whitelist whitelist))
 
-(defmacro query-dispatch ((var query) &body body)
-  (expand-query-whitelist-dispatch query
-                                   (lambda (q)
-                                     (check-query-expanded q)
-                                     `(let ((,var ,q))
-                                        ,@body))))
-
 (defun check-query-expanded (query)
-  (unless (loop for elt in (query-statement query)
-                always (or (stringp elt)
-                           (null (parameter-whitelist elt))))
-    (error "Query has not been interpolated:~%~a" query)))
+  (null (query-whitelist-parameters query)))
 
-(defun expand-query-whitelist-dispatch (query cont)
-  (let* ((statement (assure list (query-statement query))))
-    (fbindrec
-        (cont
-         (rec
-          (lambda (q s)
-            (match s
-              (() (cont q))
-              ((list* (parameter _ (list))
-                      s)
-               (rec q s))
-              ((list* (and param (parameter var whitelist))
-                      s)
-               `(string-case ,var
-                  ,@(loop for string in whitelist
-                          for stat = (substitute string param statement :count 1)
-                          collect `(,string
-                                    ,(rec
-                                      (copy-query query :statement stat)
-                                      s)))
-                  (t (invalid-string ,var ',whitelist))))
-              (otherwise (rec q (rest s)))))))
-      (rec query statement))))
+(defun query-whitelist-parameters (query)
+  (filter (conjoin (of-type 'parameter)
+                   #'has-whitelist?)
+          (query-statement query)))
+
+(defun has-whitelist? (x)
+  (not (null (parameter-whitelist x))))
+
+(defun build-query-tree (query fun)
+  (fbindrec (fun
+             (rec
+              (lambda (query params)
+                (if (null params) (fun query)
+                    (let* ((param (first params))
+                           (var (parameter-var param))
+                           (whitelist (parameter-whitelist param)))
+                      `(string-case ,var
+                         ,@(loop for string in whitelist
+                                 for old-stat = (query-statement query)
+                                 for new-stat = (substitute string param old-stat :count 1)
+                                 for q = (copy-query query :statement new-stat)
+                                 collect `(,string ,(rec q (rest params))))))))))
+    (rec query (query-whitelist-parameters query))))

@@ -19,7 +19,9 @@
   (with-gensyms (db)
     `(defun ,name (,db ,@args)
        ,docstring
-       ,(query-body db query))))
+       ,(build-query-tree
+         (lambda (q)
+           (query-body db q))))))
 
 (defun static-exports (source)
   (yesql-static-exports source))
