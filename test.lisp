@@ -245,6 +245,15 @@ select * from xs"))))))
   (signals error
     (parse 'whitelist-parameter "?{x}{y}")))
 
+(test duplicates-in-whitelist
+  "Whitelists should not contain duplicates."
+  (let ((string "{x,x}"))
+    (signals error
+      (parse 'whitelist string))
+    (is (equal '("x")
+               (handler-bind ((error #'continue))
+                 (parse 'whitelist string))))))
+
 (test parse-statement-with-whitelist
   (finishes (parse-query whitelist-query)))
 

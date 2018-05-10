@@ -84,7 +84,14 @@
     (and (and #\{ (* whitespace))
          (* whitelist-item)
          (and (* whitespace) #\}))
-  (:function second))
+  (:lambda (args)
+    (let* ((whitelist (second args))
+           (uniqs (remove-duplicates whitelist :test #'string=)))
+      (if (length= whitelist uniqs) whitelist
+          (progn
+            (cerror "Drop duplicated items"
+                    "Duplicate items in whitelist: ~a" whitelist)
+            uniqs)))))
 
 (defrule whitelist-item
     (and (* whitespace)
