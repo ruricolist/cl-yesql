@@ -42,15 +42,12 @@
   (let ((var (parameter-var param)))
     (1+ (position var (query-vars q)))))
 
-(defgeneric statement-vars (s)
-  (:method ((s string))
-    (statement-vars (parse 'statement s)))
-  (:method ((statement list))
-    (mvlet* ((parameters (filter (of-type 'parameter) statement))
-             (symbols (mapcar #'parameter-var parameters))
-             (positional keywords (partition #'positional-arg? symbols)))
-      (assert (equal positional (nub positional)))
-      (append positional (nub keywords)))))
+(defun statement-vars (statement)
+  (mvlet* ((parameters (filter (of-type 'parameter) statement))
+           (symbols (mapcar #'parameter-var parameters))
+           (positional keywords (partition #'positional-arg? symbols)))
+    (assert (equal positional (nub positional)))
+    (append positional (nub keywords))))
 
 (defconst no-docs "No docs.")
 
@@ -66,11 +63,7 @@
       (prin1 x s)))
 
 (defmethod parse-query ((s string))
-  (let* ((query (parse 'query (ensure-trailing-newline s)))
-         (statement (query-statement query)))
-    (copy-query query
-                :statement
-                (parse 'statement statement))))
+  (parse 'query (ensure-trailing-newline s)))
 
 (defmethod parse-query ((p pathname))
   (parse-query (read-file-into-string p)))

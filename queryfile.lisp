@@ -4,6 +4,7 @@
   (:shadow :comment :whitespace)
   (:shadowing-import-from :cl-yesql/defrule
     :defrule)
+  (:import-from :cl-yesql/statement)
   (:export
    :queries
    :query
@@ -27,7 +28,7 @@
   (name string)
   (annotation annotation)
   (docstring string)
-  (statement (or string list)))
+  (statement list))
 
 (defun name-affix (name)
   (assure (or null annotation)
@@ -53,7 +54,7 @@
                              (name-affix name)
                              :rows)
                          (or docstring no-docs)
-                         statement))))
+                         (parse 'cl-yesql/statement:statement statement)))))
 
 (defrule docstring (+ comment)
   (:lambda (comments)
