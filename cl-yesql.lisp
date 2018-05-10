@@ -118,9 +118,6 @@
           when name
             collect (lispify-sql-id name :package :keyword))))
 
-(defmacro query-whitelist-dispatch (query macro)
-  (expand-query-whitelist-dispatch query macro))
-
 (defcondition string-not-in-whitelist (error)
   ((string :initarg :string :type string)
    (whitelist :initarg :whitelist :type whitelist))
