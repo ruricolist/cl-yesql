@@ -29,6 +29,7 @@
   `(defun ,name ()
      ,docstring
      ,(build-query-tree
+       query
        (lambda (q)
          `(values ,(query-string q)
                   ,(query-thunk q))))))

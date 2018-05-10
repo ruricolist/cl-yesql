@@ -20,6 +20,7 @@
     `(defun ,name (,db ,@args)
        ,docstring
        ,(build-query-tree
+         query
          (lambda (q)
            (query-body db q))))))
 
