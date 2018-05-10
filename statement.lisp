@@ -69,9 +69,10 @@
 (defrule statement
     (and substatement (* (and parameter substatement)))
   (:lambda (tree)
-    (~> tree
-        flatten
-        handle-placeholders)))
+    (~>> tree
+         flatten
+         handle-placeholders
+         (remove-if (conjoin #'stringp #'emptyp)))))
 
 (defrule substatement
     (* (or (or (+ (not (or #\? #\: #\')))
