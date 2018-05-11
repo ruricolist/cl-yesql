@@ -143,6 +143,13 @@
   (not (null (parameter-whitelist x))))
 
 (defun build-query-tree (query fun)
+  "Call FUN on each concrete expansion of QUERY.
+
+E.g., if QUERY has single parameter with a whitelist with three
+possible expansions, then FUN will be called on each of the three
+possible versions of QUERY. If there is a second parameter with two
+expansions, then FUN will be called on each of six (=2*3) possible
+expansions."
   (fbindrec (fun
              (rec
               (lambda (query params)
