@@ -265,10 +265,11 @@ select * from xs"))))))
 (test build-tree-with-whitelist
   (is
    (equal
-    (build-query-tree
-     (parse-query whitelist-query)
-     (lambda (q)
-       (list 'quote (query-vars q))))
+    (butlast
+     (build-query-tree
+      (parse-query whitelist-query)
+      (lambda (q)
+        (list 'quote (query-vars q)))))
     `(string-case cl-yesql/statement::?0
        ("player_name"
         '(cl-yesql/statement::?1))
