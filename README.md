@@ -12,6 +12,10 @@ For SQL files, the syntax supported by cl-yesql is (or should be) a
 superset of the syntax supported by
 [the original Clojure library][syntax].
 
+## Extensions to Yesql
+
+### Annotations
+
 CL-Yesql understands more affixes than Clojure’s Yesql does. The
 original understands `fn!` (meaning that the function returns nothing)
 and `fn<!` (meaning that the function should return the last id).
@@ -63,6 +67,34 @@ arguments and keyword arguments as you would to any Lisp function.
     (users-by-country :country-code "USA")
 
     (young-user-names-by-country "GB" "US" :max-age 18)
+
+### Whitelists
+
+Sometimes you want to define a query that is a trivial variation of another query.
+
+``` sql
+-- name: user-names-asc
+SELECT name FROM user_name ORDER BY name ASC
+
+-- name: user-names-desc
+SELECT name FROM user_name ORDER BY name DESC
+```
+
+Obviously it would be better if you could define these as one query
+with a parameter. No SQL database, however, lets you pass ASC and DESC
+as parameters. The same goes for column names, table names, etc.
+
+Our solution to this problem is to allow specifying a parameter with a
+*whitelist*. The whitelist consists of a set of comma-separated
+options appearing directly after a parameter.
+
+``` sql
+-- name: user-names
+SELECT name FROM user_name ORDER BY name :order{ASC,DESC}
+```
+
+This gives you the flexibility to define multiple queries in a single
+function without opening the door to SQL injection.
 
 # Importing
 
