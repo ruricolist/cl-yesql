@@ -155,5 +155,6 @@
                                  for old-stat = (query-statement query)
                                  for new-stat = (substitute string param old-stat :count 1)
                                  for q = (copy-query query :statement new-stat)
-                                 collect `(,string ,(rec q (rest params))))))))))
+                                 collect `(,string ,(rec q (rest params))))
+                         (t (invalid-string ,var ',whitelist))))))))
     (rec query (query-whitelist-parameters query))))
