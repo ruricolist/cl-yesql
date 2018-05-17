@@ -50,8 +50,17 @@
 (defun simple-query-body (query style)
   (let ((vars (query-vars query))
         (statement (query-string query)))
-    `(funcall (load-time-value (pomo:prepare ,statement ,style))
+    `(funcall ,(statement-fn-form statement style)
               ,@vars)))
+
+(defun statement-fn-form (statement style)
+  (if (string-prefix-p "create" statement)
+      (if (eql style :none)
+          `(lambda ()
+             (pomo:execute statement))
+          (error "A DDL statement cannot return."))
+      `(load-time-value
+        (pomo:prepare ,statement ,style))))
 
 (defun sanity-check-fragment (fragment)
   (when (scan "\\$\\d+" fragment)
