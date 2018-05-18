@@ -33,7 +33,11 @@
 
 (in-package #:cl-yesql)
 
-;;; "cl-yesql" goes here. Hacks and glory await!
+;;; TODO One more feature I want: the ability to reference a previous
+;;; query in a query. That way you could easily create trivial
+;;; variations on a base query, e.g. SELECT COUNT(*) FROM $query or
+;;; SELECT EXISTS $query. Perhaps this could be done by building on
+;;; the whitelist feature with an implicit prefix and suffix argument.
 
 (defun query-vars (query)
   (statement-vars (query-statement query)))

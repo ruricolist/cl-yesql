@@ -16,6 +16,8 @@
    :too-many-placeholders))
 (in-package :cl-yesql/statement)
 
+;;; TODO It should be possible to have comments in the body of the statement.
+
 (defunit placeholder)
 
 (defconstructor parameter
