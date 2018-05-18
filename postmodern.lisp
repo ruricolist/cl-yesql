@@ -4,7 +4,9 @@
   (:import-from #:pomo #:execute #:prepare #:*database*)
   (:shadowing-import-from #:ppcre #:scan)
   (:shadowing-import-from #:pomo #:query)
-  (:shadow #:read-module)
+  (:shadowing-import-from #:cl-yesql/lang
+    #:read-module
+    #:module-progn)
   (:export #:yesql-postmodern #:static-exports
            #:read-module #:module-progn))
 (in-package #:cl-yesql/postmodern)
@@ -13,15 +15,6 @@
   (loop until *database* do
     (cerror "Check again"
             "There is no database connection.")))
-
-(defun read-module (source stream)
-  `(module-progn
-     ,@(cl-yesql:yesql-reader source stream)))
-
-(defmacro module-progn (&body forms)
-  (let ((exports (mapcar (op `(function ,(second _))) forms)))
-    `(simple-module ,exports
-       ,@forms)))
 
 (defmacro defquery (name args &body (docstring query))
   `(defun ,name ,args

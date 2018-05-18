@@ -3,17 +3,11 @@
     #:cl #:alexandria #:serapeum #:cl-yesql #:sqlite
     :cl-yesql/sqlite-common)
   (:import-from #:overlord #:simple-module)
-  (:shadow #:read-module)
+  (:shadowing-import-from #:cl-yesql/lang
+    #:read-module
+    #:module-progn)
   (:export #:yesql-sqlite #:read-module #:module-progn #:static-exports))
 (in-package #:cl-yesql/sqlite)
-
-(defun read-module (source stream)
-  `(module-progn
-     ,@(yesql:yesql-reader source stream)))
-
-(defmacro module-progn (&body forms)
-  `(simple-module ,(mapcar (op `(function ,(second _))) forms)
-     ,@forms))
 
 (defmacro defquery (name args &body (docstring query))
   (with-gensyms (db)

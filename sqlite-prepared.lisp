@@ -4,7 +4,9 @@
     :cl-yesql :cl-yesql/sqlite-common)
   (:import-from :overlord :simple-module)
   (:import-from :sqlite)
-  (:shadow :read-module)
+  (:shadowing-import-from :cl-yesql/lang
+    :read-module
+    :module-progn)
   (:export
    :yesql-sqlite-prepared
    :with-prepared-statement
@@ -14,15 +16,6 @@
 
 (defun static-exports (file)
   (yesql-static-exports file))
-
-(defun read-module (path stream)
-  `(module-progn
-     ,@(yesql-reader path stream)))
-
-(defmacro module-progn (&body body)
-  (let ((exports (mapcar (op `(function ,(second _))) body)))
-    `(simple-module ,exports
-       ,@body)))
 
 (defmacro defquery (name args &body (docstring query))
   (declare (ignore args))
