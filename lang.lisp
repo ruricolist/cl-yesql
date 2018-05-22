@@ -1,6 +1,7 @@
 (defpackage :cl-yesql/lang
   (:use :cl :serapeum :cl-yesql)
   (:shadow :read-module)
+  (:import-from :overlord :simple-module)
   (:export :read-module :module-progn)
   (:documentation "Define a reader and expander for concrete Yesql languages to inherit."))
 (in-package :cl-yesql/lang)

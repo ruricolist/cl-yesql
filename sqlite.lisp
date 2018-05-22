@@ -2,7 +2,6 @@
   (:use
     #:cl #:alexandria #:serapeum #:cl-yesql #:sqlite
     :cl-yesql/sqlite-common)
-  (:import-from #:overlord #:simple-module)
   (:shadowing-import-from #:cl-yesql/lang
     #:read-module
     #:module-progn)
