@@ -103,13 +103,13 @@ Importing from Yesql files is done in the usual way, through Overlord.
 At the moment, that looks like this:
 
     ;; Importing everything.
-    (overlord:import my-queries
+    (yesql:import my-queries
       :from "sql/queries.sql"
       :as :cl-yesql/postmodern
       :binding :all-as-functions)
 
     ;; Importing individual functions.
-    (overlord:import my-queries
+    (yesql:import my-queries
       :from "sql/queries.sql"
       :as :cl-yesql/postmodern
       :binding (#'database-size #'thing-tags))

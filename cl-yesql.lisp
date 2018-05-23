@@ -5,12 +5,15 @@
     #:cl-yesql/queryfile
     #:cl-yesql/statement)
   (:nicknames #:yesql)
-  (:import-from #:overlord)
+  (:shadowing-import-from :overlord
+    #:import)
   (:import-from #:trivia
     #:match)
   (:import-from #:esrap
     #:parse)
   (:export
+   #:import
+
    #:parse-query
    #:parse-queries
 
