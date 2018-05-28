@@ -1,5 +1,6 @@
 (defpackage :cl-yesql/test
   (:use :cl :alexandria :serapeum :fiveam :cl-yesql)
+  (:shadowing-import-from :cl-yesql :import)
   (:import-from :trivia :match)
   (:import-from :cl-yesql/statement
     :whitelist
@@ -10,6 +11,10 @@
     :placeholder
     :statement
     :too-many-placeholders)
+  ;; Make sure there are no package problems.
+  (:import-from :cl-yesql/postmodern)
+  (:import-from :cl-yesql/sqlite)
+  (:import-from :cl-yesql/sqlite-prepared)
   (:import-from :esrap :parse)
   (:export :run-tests))
 (in-package :cl-yesql/test)
