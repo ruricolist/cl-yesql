@@ -1,5 +1,6 @@
 (defpackage :cl-yesql/lang
   (:use :cl :serapeum :cl-yesql)
+  (:shadowing-import-from :cl-yesql :import)
   (:shadow :read-module)
   (:import-from :overlord :simple-module)
   (:export :read-module :module-progn)

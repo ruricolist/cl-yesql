@@ -1,5 +1,6 @@
 (defpackage :cl-yesql/sqlite-common
   (:use :cl :cl-yesql)
+  (:shadowing-import-from :cl-yesql :import)
   (:import-from :cl-yesql/statement :parameter-var)
   (:export :query-string :var-offset))
 (in-package :cl-yesql/sqlite-common)

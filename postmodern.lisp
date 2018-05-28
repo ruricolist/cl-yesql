@@ -1,5 +1,6 @@
 (defpackage #:cl-yesql/postmodern
   (:use #:cl #:alexandria #:serapeum #:cl-yesql)
+  (:shadowing-import-from #:cl-yesql #:import)
   (:import-from #:pomo #:execute #:prepare #:*database*)
   (:shadowing-import-from #:ppcre #:scan)
   (:shadowing-import-from #:pomo #:query)
