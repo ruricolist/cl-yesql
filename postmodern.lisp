@@ -55,7 +55,7 @@
   (if (string-prefix-p "create" statement)
       (if (eql style :none)
           `(lambda ()
-             (pomo:execute statement))
+             (pomo:execute ,statement))
           (error "A DDL statement cannot return."))
       `(load-time-value
         (pomo:prepare ,statement ,style))))
