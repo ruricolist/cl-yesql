@@ -63,7 +63,8 @@
 (defun sanity-check-fragment (fragment)
   (when (scan "\\$\\d+" fragment)
     (simple-style-warning "Suspicious occurrence of $n in a Postgres ~
-      statement.~%Yesql uses ? for positional arguments.")))
+      statement: ~s.~%Yesql uses ? for positional arguments."
+                          fragment)))
 
 (defun query-string (q)
   (with-output-to-string (s)
