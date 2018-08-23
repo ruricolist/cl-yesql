@@ -5,7 +5,7 @@
     #:cl-yesql/queryfile
     #:cl-yesql/statement)
   (:nicknames #:yesql)
-  (:shadowing-import-from :overlord
+  (:shadowing-import-from :vernacular
     #:import)
   (:import-from #:trivia
     #:match)
@@ -88,14 +88,14 @@
 
 (defun yesql-reader (path stream)
   (declare (ignore path))
-  (let ((defquery (overlord:reintern 'defquery)))
+  (let ((defquery (vernacular:reintern 'defquery)))
     (loop for query in (parse-queries stream)
           collect `(,defquery ,(query-id query) ,(query-args query)
                      ,(query-docstring query)
                      ,query))))
 
 (defun read-module (source stream)
-  (overlord:with-meta-language (source stream)
+  (vernacular:with-meta-language (source stream)
     (yesql-reader source stream)))
 
 (defun ensure-trailing-newline (s)

@@ -2,8 +2,8 @@ CL-Yesql is a Common Lisp library for *using* SQL, based on Clojure’s
 [Yesql][].
 
 Besides being useful in itself, this library also serves as a
-demonstration of writing a language for [Overlord][], as well as the
-advantages of allowing (as Overlord does) the same file to be loaded
+demonstration of writing a language for [Vernacular][], as well as the
+advantages of allowing (as Vernacular does) the same file to be loaded
 as different modules in different languages.
 
 # The Yesql file
@@ -98,7 +98,7 @@ function without opening the door to SQL injection.
 
 # Importing
 
-Importing from Yesql files is done in the usual way, through Overlord.
+Importing from Yesql files is done in the usual way, through Vernacular.
 
 At the moment, that looks like this:
 
@@ -119,8 +119,6 @@ current file.
 
 Note also that the `:cl-yesql/postmodern` system must be loaded before
 the above code is compiled.
-
-Overlord is still experimental, however, so the syntax may change.
 
 ## Languages
 
@@ -155,7 +153,7 @@ The functions exported by the prepared SQLite language are not
 intended for direct use. Instead, they return templates for use with
 `cl-yesql/sqlite-prepared:with-prepared-statement`.
 
-    (overlord:import sqlite-prepared
+    (yesql:import sqlite-prepared
       :from "sql/sqlite.sql"
       :as :cl-yesql/sqlite-prepared
       :values (#'record-kv))
@@ -180,5 +178,6 @@ that package, create an appropriate binding for `defquery`.
 
 [Yesql]: https://github.com/krisajenkins/yesql
 [syntax]: https://github.com/krisajenkins/yesql#one-file-many-queries
-[Overlord]: https://github.com/TBRSS/overlord
+[Overlord]: https://github.com/ruricolist/overlord
+[Vernacular]: https://github.com/ruricolist/vernacular
 [Postmodern]: http://marijnhaverbeke.nl/postmodern/
