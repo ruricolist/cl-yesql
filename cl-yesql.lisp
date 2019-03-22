@@ -90,9 +90,13 @@
   (declare (ignore path))
   (let ((defquery (vernacular:reintern 'defquery)))
     (loop for query in (parse-queries stream)
-          collect `(,defquery ,(query-id query) ,(query-args query)
-                     ,(query-docstring query)
-                     ,query))))
+          collect (query-form query defquery))))
+
+(defun query-form (query defquery)
+  `(,defquery ,(query-id query) ,(query-args query)
+     ,(query-docstring query)
+     ,(query-keyword-sanity-check query)
+     ,query))
 
 (defun read-module (source stream)
   (vernacular:with-meta-language (source stream)
@@ -104,13 +108,27 @@
         s
         (concat s nl))))
 
+(defun supplied-p-var (var)
+  (intern (string+ var '-supplied?)
+          (symbol-package var)))
+
+(defun query-keyword-sanity-check (q)
+  `(progn
+     ,@(loop for var in (query-keyword-vars q)
+             for supplied-p = (supplied-p-var var)
+             collect `(unless ,supplied-p
+                        (required-argument ',var)))))
+
+(defun query-keyword-vars (q)
+  (remove-if #'positional-arg? (query-vars q)))
+
 (defun query-args (q)
   (mvlet* ((positional keyword (partition #'positional-arg? (query-vars q)))
            ;; Keyword arguments are not optional. In particular,
            ;; backends differ in how they treat `nil': e.g. sqlite
            ;; treats it as NULL, but cl-postgres treats it as FALSE.
            (keyword
-            (mapcar (op `(,_1 (required-argument ',_1))) keyword))
+            (mapcar (op `(,_1 nil ,(supplied-p-var _1))) keyword))
            (args (append positional (cons '&key keyword))))
     (assert (equal args (nub args)))
     args))
