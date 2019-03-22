@@ -106,7 +106,9 @@
 
 (defun query-args (q)
   (mvlet* ((positional keyword (partition #'positional-arg? (query-vars q)))
-           ;; Keyword arguments are not optional.
+           ;; Keyword arguments are not optional. In particular,
+           ;; backends differ in how they treat `nil': e.g. sqlite
+           ;; treats it as NULL, but cl-postgres treats it as FALSE.
            (keyword
             (mapcar (op `(,_1 (required-argument ',_1))) keyword))
            (args (append positional (cons '&key keyword))))
