@@ -143,7 +143,7 @@ SELECT TRUE
          (args (query-args query)))
     (is-true
      (match args
-       ((list '&key (list _ (list 'required-argument _)))
+       ((list '&key _)
         t)))))
 
 (test positional-and-keyword-args
@@ -152,7 +152,7 @@ SELECT TRUE
    (let* ((query (parse-query young-user-names-by-country))
           (args (query-args query)))
      (match args
-       ((list _ _ '&key (list _ (list 'required-argument _)))
+       ((list _ _ '&key _)
         t)))))
 
 (test same-arg-twice
