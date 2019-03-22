@@ -282,3 +282,24 @@ select * from xs"))))))
         '(cl-yesql/statement::?1))
        ("display_name"
         '(cl-yesql/statement::?1))))))
+
+(test single-line-comment-in-statement
+  (let ((string
+          (first
+           (parse 'statement
+                  "CREATE TABLE player_group (
+    player_group_name text   NOT NULL,
+    -------------
+    player_group_id   serial NOT NULL PRIMARY KEY);
+"))))
+    (is-true (search "player_group_id" string))))
+
+(test trailing-comment
+  (finishes
+    (parse 'statement "hello -- world"))
+  (signals error
+    (parse 'statement "hello /* world")))
+
+(test ignore-params-in-comments
+  (is (= 3 (length (parse 'statement "select *? * from table"))))
+  (is (= 1 (length (parse 'statement "select /* *? */ * from table")))))

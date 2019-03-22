@@ -16,8 +16,6 @@
    :too-many-placeholders))
 (in-package :cl-yesql/statement)
 
-;;; TODO It should be possible to have comments in the body of the statement.
-
 (defunit placeholder)
 
 (defconstructor parameter
@@ -77,8 +75,9 @@
          (remove-if (conjoin #'stringp #'emptyp)))))
 
 (defrule substatement
-    (* (or (or (+ (not (or #\? #\: #\')))
+    (* (or (or (+ (not (or #\? #\: #\' comment-start)))
                "::")
+           comment
            string))
   (:text t))
 
@@ -138,6 +137,34 @@
                     ,@(coerce "{},\"':&;()|=+\-*%/\\<>^" 'list)))))
   (:lambda (args)
     (lispify-sql-id (string-upcase (text (second args))))))
+
+(defrule single-line-comment-start "--")
+
+(defrule single-line-comment
+    (and single-line-comment-start
+         (* (not newline))
+         (? newline))
+  (:lambda (args)
+    ;; When possible, preserve single-line comments by rewriting them
+    ;; as multi-line comments.
+    (let ((comment-text (second args)))
+      ;; Perversity.
+      (if (search "/*" comment-text)
+          nil
+          (list "/*" (text (second args)) "*/")))))
+
+(defrule multi-line-comment-start "/*")
+
+(defrule multi-line-comment
+    (and multi-line-comment-start
+         (* (not "*/"))
+         "*/")
+  (:lambda (args)
+    (list "/*" (text (second args)) "*/")))
+
+(defrule comment-start (or single-line-comment-start multi-line-comment-start))
+
+(defrule comment (or single-line-comment multi-line-comment))
 
 (defrule whitespace
     (+ (or #\Space #\Tab)))
