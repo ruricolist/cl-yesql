@@ -29,7 +29,8 @@
 
    #:yesql
 
-   #:yesql-reader #:read-module))
+   #:yesql-reader #:read-module
+   #:need))
 
 (defpackage #:cl-yesql-user
   (:use))
@@ -104,14 +105,19 @@
         s
         (concat s nl))))
 
+(defsubst need (arg)
+  "Shorthand for alexandria:required-argument."
+  (required-argument arg))
+
 (defun query-args (q)
-  (mvlet* ((positional keyword (partition #'positional-arg? (query-vars q)))
+  (mvlet* ((positional keywords (partition #'positional-arg? (query-vars q)))
            ;; Keyword arguments are not optional. In particular,
            ;; backends differ in how they treat `nil': e.g. sqlite
            ;; treats it as NULL, but cl-postgres treats it as FALSE.
-           (keyword
-            (mapcar (op `(,_1 (required-argument ',_1))) keyword))
-           (args (append positional (cons '&key keyword))))
+           (keywords
+            (loop for var in keywords
+                  collect `(,var (need ,(make-keyword var)))))
+           (args (append positional (cons '&key keywords))))
     (assert (equal args (nub args)))
     args))
 
