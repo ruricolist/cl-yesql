@@ -18,8 +18,6 @@
    :annotation))
 (in-package :cl-yesql/queryfile)
 
-;;; TODO More annotations? E.g. @count, @exists.
-
 (defconst annotations
   '(:rows :row :values :column :single :execute :last-id))
 

@@ -11,11 +11,6 @@
            #:read-module #:module-progn))
 (in-package #:cl-yesql/postmodern)
 
-;;; TODO The limitations of the Yesql language are iteration and
-;;; Postmodern DAOs. Iteration should be doable with a postmodern/iter
-;;; language, but I'm not sure if DAOs can be made to fit the Yesql
-;;; paradigm.
-
 (defun check-connection ()
   (loop until *database* do
     (cerror "Check again"
