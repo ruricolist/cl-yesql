@@ -109,6 +109,15 @@
   "Shorthand for alexandria:required-argument."
   (required-argument arg))
 
+(defun query-var-default (query var)
+  (let* ((statement (query-statement query))
+         (p (find var statement
+                  :key (conjoin (of-type 'parameter)
+                                #'parameter-var))))
+    (if (and p (has-whitelist? p))
+        (first (parameter-whitelist p))
+        `(need ,(make-keyword var)))))
+
 (defun query-args (q)
   (mvlet* ((positional keywords (partition #'positional-arg? (query-vars q)))
            ;; Keyword arguments are not optional. In particular,
@@ -116,7 +125,8 @@
            ;; treats it as NULL, but cl-postgres treats it as FALSE.
            (keywords
             (loop for var in keywords
-                  collect `(,var (need ,(make-keyword var)))))
+                  for default = (query-var-default q var)
+                  collect `(,var ,default)))
            (args (append positional (cons '&key keywords))))
     (assert (equal args (nub args)))
     args))
@@ -154,8 +164,8 @@
                    #'has-whitelist?)
           (query-statement query)))
 
-(defun has-whitelist? (x)
-  (not (null (parameter-whitelist x))))
+(defun has-whitelist? (param)
+  (not (null (parameter-whitelist param))))
 
 (defun build-query-tree (query fun)
   "Call FUN on each concrete expansion of QUERY.

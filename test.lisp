@@ -60,6 +60,13 @@ AND age < :max_age"))
 SELECT * from player
  WHERE ?{player_name, email, display_name} = ?"))
 
+(def whitelist-query/keywords
+  (trim-whitespace
+   "
+-- name: player-row
+SELECT * from player
+ WHERE :col{player_name, email, display_name} = :val"))
+
 (test parsing-finishes
   (finishes (parse-query users-by-country))
   (finishes (parse-query user-count))
@@ -261,6 +268,13 @@ select * from xs"))))))
 
 (test parse-statement-with-whitelist
   (finishes (parse-query whitelist-query)))
+
+(test whitelist-default
+  (is-true
+   (find '(col "player_name")
+         (query-args
+          (parse-query whitelist-query/keywords))
+         :test #'equal)))
 
 (test too-many-placeholders
   (signals too-many-placeholders
