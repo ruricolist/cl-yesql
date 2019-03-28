@@ -149,13 +149,20 @@
                    (list :whitelist (second args))))))
 
 (defrule simple-parameter
-    (or placeholder-parameter
+    (or named-placeholder
+        placeholder-parameter
         keyword-parameter))
 
 (defrule placeholder-parameter "?"
   (:lambda (args)
     (declare (ignore args))
     (list 'anonymous-placeholder)))
+
+(defrule named-placeholder
+    (and "?" parameter-name)
+  (:lambda (args)
+    (list 'named-placeholder
+          :var (second args))))
 
 (defrule keyword-parameter
     (and ":" parameter-name)

@@ -306,3 +306,14 @@ select * from xs"))))))
 (test ignore-params-in-comments
   (is (= 3 (length (parse 'statement "select *? * from table"))))
   (is (= 1 (length (parse 'statement "select /* *? */ * from table")))))
+
+(test named-placeholder
+  (is (equal
+       '(id)
+       (query-args
+        (parse-query
+         "-- name: select-player-by-id @row
+-- Returns a player whose ID matches the argument.
+SELECT id, login, email, name, pass_hash, pass_salt,
+       activatedp, creation_time, last_edit_time FROM player
+  WHERE id = ?id LIMIT 1;")))))
