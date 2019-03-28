@@ -12,22 +12,49 @@
    :parameter
    :parameter-var
    :parameter-whitelist
-   :positional-arg?
+   :positional?
    :too-many-placeholders))
 (in-package :cl-yesql/statement)
 
-(defunit placeholder)
+(defclass parameter ()
+  ((whitelist
+    :type list
+    :initarg :whitelist
+    :reader parameter-whitelist))
+  (:default-initargs :whitelist nil))
 
-(defconstructor parameter
-  (var (or symbol placeholder))
-  (whitelist list))
+(defclass named-parameter (parameter)
+  ((var
+    :type symbol
+    :initarg :var
+    :initform (required-argument :var)
+    :reader parameter-var)))
+
+(defmethod print-object ((self named-parameter) stream)
+  (print-unreadable-object (self stream :type t)
+    (format stream "~a" (parameter-var self))))
+
+(defclass placeholder-parameter (parameter)
+  ())
+
+(defclass anonymous-placeholder (placeholder-parameter)
+  ())
+
+(defclass named-placeholder (placeholder-parameter named-parameter)
+  ())
+
+(defclass keyword-parameter (named-parameter)
+  ())
+
+(defgeneric positional? (param)
+  (:method ((param parameter))
+    nil)
+  (:method ((param placeholder-parameter))
+    t))
 
 (defconst positional-args
   (loop for i from 0 to 50
         collect (intern (fmt "?~a" i) #.*package*)))
-
-(defun positional-arg? (arg)
-  (memq arg positional-args))
 
 (defun handle-placeholders (orig-statement)
   (nlet rec ((statement orig-statement)
@@ -38,14 +65,13 @@
           ((endp positionals)
            (error 'too-many-placeholders
                   :statement orig-statement))
-          ((and (typep (first statement) 'parameter)
-                (typep (parameter-var (first statement))
-                       'placeholder))
+          ((and (typep (first statement) 'anonymous-placeholder))
            (rec (rest statement)
                 (rest positionals)
-                (cons (parameter (first positionals)
-                                 (parameter-whitelist
-                                  (first statement)))
+                (cons (make 'named-placeholder
+                            :var (first positionals)
+                            :whitelist (parameter-whitelist
+                                        (first statement)))
                       acc)))
           (t
            (rec (rest statement)
@@ -116,27 +142,36 @@
   (:function second))
 
 (defrule parameter
-    (or whitelist-parameter simple-parameter))
+    (and simple-parameter (? whitelist))
+  (:lambda (args)
+    (apply #'make
+           (append (first args)
+                   (list :whitelist (second args))))))
 
 (defrule simple-parameter
     (or placeholder-parameter
-        named-parameter))
-
-(defrule whitelist-parameter
-    (and simple-parameter (? whitelist))
-  (:lambda (args)
-    (apply #'parameter args)))
+        keyword-parameter))
 
 (defrule placeholder-parameter "?"
-  (:constant placeholder))
-
-(defrule named-parameter
-    (and ":"
-         (+ (not
-             #.`(or whitespace newline
-                    ,@(coerce "{},\"':&;()|=+\-*%/\\<>^" 'list)))))
   (:lambda (args)
-    (lispify-sql-id (string-upcase (text (second args))))))
+    (declare (ignore args))
+    (list 'anonymous-placeholder)))
+
+(defrule keyword-parameter
+    (and ":" parameter-name)
+  (:lambda (args)
+    (list 'keyword-parameter
+          :var (second args))))
+
+(defrule parameter-name
+    (+ (not
+        #.`(or whitespace newline
+               ,@(coerce "{},\"':&;()|=+\-*%/\\<>^" 'list))))
+  (:lambda (args)
+    (~> args
+        text
+        string-upcase
+        lispify-sql-id)))
 
 (defrule single-line-comment-start "--")
 

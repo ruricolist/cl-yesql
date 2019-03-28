@@ -40,16 +40,32 @@
 (defun query-vars (query)
   (statement-vars (query-statement query)))
 
+(defun query-positional-vars (query)
+  (statement-positional-vars (query-statement query)))
+
+(defun query-keyword-vars (query)
+  (statement-keyword-vars (query-statement query)))
+
 (defun var-offset (q param)
   (let ((var (parameter-var param)))
     (1+ (position var (query-vars q)))))
 
-(defun statement-vars (statement)
+(defun statement-positional-vars (statement)
   (mvlet* ((parameters (filter (of-type 'parameter) statement))
-           (symbols (mapcar #'parameter-var parameters))
-           (positional keywords (partition #'positional-arg? symbols)))
+           (positional (filter #'positional? parameters))
+           (positional (mapcar #'parameter-var positional)))
     (assert (equal positional (nub positional)))
-    (append positional (nub keywords))))
+    positional))
+
+(defun statement-keyword-vars (statement)
+  (mvlet* ((parameters (filter (of-type 'parameter) statement))
+           (keywords (remove-if #'positional? parameters))
+           (keywords (mapcar #'parameter-var keywords)))
+    (nub keywords)))
+
+(defun statement-vars (statement)
+  (append (statement-positional-vars statement)
+          (statement-keyword-vars statement)))
 
 (defconst no-docs "No docs.")
 
@@ -113,7 +129,8 @@
         `(need ,(make-keyword var)))))
 
 (defun query-args (q)
-  (mvlet* ((positional keywords (partition #'positional-arg? (query-vars q)))
+  (mvlet* ((positional (query-positional-vars q))
+           (keywords (query-keyword-vars q))
            ;; Keyword arguments are not optional. In particular,
            ;; backends differ in how they treat `nil': e.g. sqlite
            ;; treats it as NULL, but cl-postgres treats it as FALSE.

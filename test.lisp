@@ -4,13 +4,10 @@
   (:import-from :trivia :match)
   (:import-from :cl-yesql/statement
     :whitelist
-    :whitelist-parameter
     :parameter
     :parameter-var
     :parameter-whitelist
-    :placeholder
-    :statement
-    :too-many-placeholders)
+    :statement)
   ;; Make sure there are no package problems.
   (:import-from :cl-yesql/postmodern)
   (:import-from :cl-yesql/sqlite)
@@ -235,27 +232,24 @@ select * from xs"))))))
   (is (equal '("x" "y" "z") (parse 'whitelist "{x, y, z}")))
   (is (equal '("x" "y" "z") (parse 'whitelist "{x , y , z}"))))
 
-(defun whitelist= (list parse)
-  (equal list
-         (list (parameter-var parse)
-               (parameter-whitelist parse))))
+(defun parse-whitelist (x)
+  (parameter-whitelist (parse 'parameter x)))
 
 (test whitelist-parameter
-  (is (whitelist= `(,placeholder nil) (parse 'whitelist-parameter "?")))
-  (is (whitelist= '(foo nil) (parse 'whitelist-parameter ":foo")))
-
-  (is (whitelist= `(,placeholder ("x")) (parse 'whitelist-parameter "?{x}")))
+  (is (null (parse-whitelist "?")))
+  (is (null (parse-whitelist ":foo")))
+  (is (equal '("x") (parse-whitelist "?{x}")))
   (signals error
-    (parse 'whitelist-parameter "? {x}"))
+    (parse 'parameter "? {x}"))
 
-  (is (whitelist= '(foo ("x")) (parse 'whitelist-parameter ":foo{x}")))
+  (is (equal '("x") (parse-whitelist ":foo{x}")))
   (signals error
-    (parse 'whitelist-parameter ":foo {x}")))
+    (parse 'parameter ":foo {x}")))
 
 (test whitelist-parameter-not-recursive
   "Whitelist parameters should not be recursive."
   (signals error
-    (parse 'whitelist-parameter "?{x}{y}")))
+    (parse 'parameter "?{x}{y}")))
 
 (test duplicates-in-whitelist
   "Whitelists should not contain duplicates."
@@ -275,11 +269,6 @@ select * from xs"))))))
          (query-args
           (parse-query whitelist-query/keywords))
          :test #'equal)))
-
-(test too-many-placeholders
-  (signals too-many-placeholders
-    (parse 'statement
-           (repeat-sequence "? " 51))))
 
 (test build-tree-with-whitelist
   (is
