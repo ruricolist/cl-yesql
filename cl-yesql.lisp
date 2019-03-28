@@ -121,7 +121,9 @@
             (loop for var in keywords
                   for default = (query-var-default q var)
                   collect `(,var ,default)))
-           (args (append positional (cons '&key keywords))))
+           (args (append positional
+                         (and keywords
+                              (cons '&key keywords)))))
     (assert (equal args (nub args)))
     args))
 
