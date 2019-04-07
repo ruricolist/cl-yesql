@@ -54,8 +54,7 @@
   (mvlet* ((parameters (filter (of-type 'parameter) statement))
            (positional (filter #'positional? parameters))
            (positional (mapcar #'parameter-var positional)))
-    (assert (equal positional (nub positional)))
-    positional))
+    (nub positional)))
 
 (defun statement-keyword-vars (statement)
   (mvlet* ((parameters (filter (of-type 'parameter) statement))

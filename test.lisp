@@ -317,3 +317,21 @@ select * from xs"))))))
 SELECT id, login, email, name, pass_hash, pass_salt,
        activatedp, creation_time, last_edit_time FROM player
   WHERE id = ?id LIMIT 1;")))))
+
+(test named-placeholder-lambda
+  (is (equal '(player-id player-group-id is-owner)
+             (query-args
+              (parse-query
+               "-- name: add-player-into-player-group @execute
+-- Adds a player to a player group.
+INSERT INTO players_groups (player_id, player_group_id, is_owner)
+  VALUES(?player_id, ?player_group_id, ?is_owner)")))))
+
+(test named-placeholders-with-repeats
+  (is (= 3
+         (length
+          (query-args
+           (parse-query
+            "-- name: q
+INSERT INTO players_groups (player_id, other_player_id, player_group_id, is_owner)
+  VALUES(?player_id, ?player_id, ?player_group_id, ?is_owner)"))))))
