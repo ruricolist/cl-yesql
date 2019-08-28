@@ -22,6 +22,9 @@
 (def-suite cl-yesql)
 (in-suite cl-yesql)
 
+(def-suite parser :in cl-yesql)
+(in-suite parser)
+
 (def users-by-country
   (trim-whitespace
    "
@@ -335,3 +338,49 @@ INSERT INTO players_groups (player_id, player_group_id, is_owner)
             "-- name: q
 INSERT INTO players_groups (player_id, other_player_id, player_group_id, is_owner)
   VALUES(?player_id, ?player_id, ?player_group_id, ?is_owner)"))))))
+
+(def-suite sqlite :in cl-yesql)
+(in-suite sqlite)
+
+(yesql:import sqlite-test
+  :from "t/test.sql"
+  :binding :all-as-functions)
+
+(def db-data
+  '(("Thomas Young" 17 "GB")
+    ("Yuengling" 17 "US")
+    ("Oldsmobile" 50 "US")
+    ("Elder Wand" 50 "US")
+    ("Alfred Whitehead" 60 "GB"))
+  "Test data, lists of name, age, and country code.")
+
+(defun prep-example-db (db)
+  (create-user-table db)
+  (loop for (name age country-code) in db-data
+        do (add-user db
+                     :name name
+                     :age age
+                     :country-code country-code))
+  (values))
+
+(test readme-examples
+  (sqlite:with-open-database (db ":memory:")
+    ;; Prep the DB.
+    (prep-example-db db)
+    (let ((young-users (young-users-by-country db "US" "GB" :max-age 18)))
+      (is (set-equal
+           (mapcar #'first young-users)
+           (mapcar #'first
+                   (filter (op (< (second _) 18))
+                           db-data))
+           :test #'equal)))
+    (is (= 3 (caar (users-by-country db :country-code "US"))))
+    (is (= (user-count db) (length db-data)))
+    (is (equal (user-names db :order "ASC")
+               (map 'list #'first
+                    (sort-new db-data #'string<
+                              :key #'first))))
+    (is (equal (user-names db :order "DESC")
+               (map 'list #'first
+                    (sort-new db-data #'string>
+                              :key #'first))))))
