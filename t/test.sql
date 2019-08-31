@@ -40,3 +40,9 @@ WHERE (
 
 -- name: user-names @column
 SELECT name FROM user ORDER BY name :order{ASC,DESC}
+
+-- name: user-age @single
+SELECT age FROM user WHERE name = ?
+
+-- name: user-age @setter
+UPDATE user SET age = ? where name = ?

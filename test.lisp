@@ -344,7 +344,9 @@ INSERT INTO players_groups (player_id, other_player_id, player_group_id, is_owne
 
 (yesql:import sqlite-test
   :from "t/test.sql"
-  :binding :all-as-functions)
+  :binding
+  (:import-set :all-as-functions
+               (:only :all-as-setters #'(setf user-age))))
 
 (def db-data
   '(("Thomas Young" 17 "GB")
@@ -383,4 +385,8 @@ INSERT INTO players_groups (player_id, other_player_id, player_group_id, is_owne
     (is (equal (user-names db :order "DESC")
                (map 'list #'first
                     (sort-new db-data #'string>
-                              :key #'first))))))
+                              :key #'first))))
+    (let* ((name (first (random-elt db-data)))
+           (age (user-age db name)))
+      (incf (user-age db name))
+      (is (> (user-age db name) age)))))

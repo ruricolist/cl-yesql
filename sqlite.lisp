@@ -11,7 +11,12 @@
 
 (defmacro defquery (name args &body (docstring query))
   (with-gensyms (db)
-    `(defun ,name (,db ,@args)
+    `(defun ,name
+         ,(if (eql :setter (query-annotation query))
+              (list* (first args)
+                     db
+                     (rest args))
+              `(,db ,@args))
        ,docstring
        ,(build-query-tree
          query
@@ -32,6 +37,10 @@
     (ecase-of annotation (query-annotation q)
       (:rows `(execute-to-list ,@args))
       (:execute `(execute-non-query ,@args))
+      (:setter
+       `(progn
+          (execute-non-query ,@args)
+          ,(first (query-args q))))
       (:last-id
        `(progn
           (execute-non-query ,@args)

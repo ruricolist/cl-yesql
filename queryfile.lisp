@@ -19,10 +19,17 @@
 (in-package :cl-yesql/queryfile)
 
 (defconst annotations
-  '(:rows :row :values :column :single :execute :last-id))
+  '(:rows :row :values :column :single :execute :last-id :setter))
 
 (deftype annotation ()
   `(member ,@annotations))
+
+(-> string->annotation (string) annotation)
+(defun string->annotation (string)
+  #.`(string-ecase string
+       ,@(loop for annot in annotations
+               for string = (string-downcase annot)
+               collect `(,string ,annot))))
 
 (defconstructor query
   (name string)
@@ -67,14 +74,7 @@
 (defrule annotation (and (? whitespace)
                          "@" #.`(or ,@(mapcar #'string-downcase annotations)))
   (:lambda (args)
-    (assure annotation
-      (string-ecase (third args)
-        ("single" :single)
-        ("row" :row)
-        ("rows" :rows)
-        ("column" :column)
-        ("execute" :execute)
-        ("last-id" :last-id)))))
+    (string->annotation (third args))))
 
 (defrule name
     (and (and (? whitespace)

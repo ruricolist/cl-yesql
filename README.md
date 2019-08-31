@@ -156,6 +156,37 @@ Annotation | Meaning
 @single    | a single value
 @execute   | no return value (same as !)
 @last-id   | ID of the last row inserted (same as <!)
+@setter    | A setf function.
+
+#### Setters
+
+Yesql can be used to define setf functions using the `@setter` annotation:
+
+    -- name: user-age @setter
+    UPDATE user SET age = ? where name = :name
+
+    -- name: user-age @setter
+    UPDATE user SET age = ? where name = :name
+
+Setters are imported using a slightly different syntax:
+
+    (yesql:import user-queries
+      :from "sql/users.sql"
+      :as :cl-yesql/sqlite
+      :binding (#'user-age #’(setf user-age))
+
+The `:all-as-functions` syntax does not cover setters; if you want to import setters alongside functions, you need to use the `:import-set` syntax:
+
+    (yesql:import user-queries
+      :from "sql/users.sql"
+      :binding
+      (:import-set :all-as-functions
+                   (:only :all-as-setters #'(setf user-age))))
+
+A setter must have at least one positional argument. When using
+setters, be careful to make sure that the positional arguments are in
+the right order, so the value argument comes first. (This is the
+natural order when using `UPDATE`.)
 
 ### Whitelists
 

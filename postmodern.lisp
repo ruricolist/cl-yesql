@@ -35,6 +35,10 @@
        (simple-query-body query annot))
       ((:execute)
        (simple-query-body query :none))
+      ((:setter)
+       `(progn
+          ,(simple-query-body query :none)
+          ,(first (query-args query))))
       ((:values)
        `(values-list ,(simple-query-body query :row)))
       (:last-id

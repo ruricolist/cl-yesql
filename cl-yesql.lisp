@@ -71,6 +71,12 @@
 (defun query-id (q)
   (lispify-sql-id (query-name q)))
 
+(defun query-spec (q)
+  (let ((id (query-id q)))
+    (if (eql :setter (query-annotation q))
+        `(setf ,id)
+        id)))
+
 (defun print-sql (x s)
   (if (listp x)
       (loop for (each . more?) on x
@@ -100,7 +106,7 @@
   (declare (ignore path))
   (let ((defquery (vernacular:reintern 'defquery)))
     (loop for query in (parse-queries stream)
-          collect `(,defquery ,(query-id query) ,(query-args query)
+          collect `(,defquery ,(query-spec query) ,(query-args query)
                      ,(query-docstring query)
                      ,query))))
 
@@ -140,6 +146,9 @@
            (args (append positional
                          (and keywords
                               (cons '&key keywords)))))
+    (when (eql :setter (query-annotation q))
+      (unless (rest positional)
+        (error "A setter must have at least one positional argument.")))
     (assert (equal args (nub args)))
     args))
 
