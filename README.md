@@ -163,7 +163,7 @@ Annotation | Meaning
 Yesql can be used to define setf functions using the `@setter` annotation:
 
     -- name: user-age @single
-    UPDATE user SET age = ? where name = ?
+    SELECT age FROM user WHERE name = ?
 
     -- name: user-age @setter
     UPDATE user SET age = ? where name = ?
