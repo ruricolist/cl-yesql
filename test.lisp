@@ -345,8 +345,7 @@ INSERT INTO players_groups (player_id, other_player_id, player_group_id, is_owne
 (yesql:import sqlite-test
   :from "t/test.sql"
   :binding
-  (:import-set :all-as-functions
-               (:only :all-as-setters #'(setf user-age))))
+  (:import-set :all-functions :all-setters))
 
 (def db-data
   '(("Thomas Young" 17 "GB")
