@@ -158,11 +158,14 @@
   (with-input-from-file (in file)
     (loop for line = (read-line in nil nil)
           while line
-          for name = (ignore-errors
-                      (car
-                       (parse 'name (concat line #.(string #\Newline)))))
+          for (name . annotation) = (ignore-errors
+                                     (parse 'name (concat line #.(string #\Newline))))
           when name
-            collect (lispify-sql-id name :package :keyword))))
+            collect
+            (let ((id (lispify-sql-id name :package :keyword)))
+              (if (eql annotation :setter)
+                  `(function (setf ,id))
+                  `(function ,id))))))
 
 (defcondition string-not-in-whitelist (error)
   ((string :initarg :string :type string)
