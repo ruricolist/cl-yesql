@@ -44,7 +44,7 @@ Importing from Yesql files is done in the usual way for Vernacular. That looks l
     (yesql:import my-queries
       :from "sql/queries.sql"
       :as :cl-yesql/postmodern
-      :binding :all-as-functions)
+      :binding :all-functions)
 
     ;; Importing individual functions.
     (yesql:import my-queries
@@ -168,20 +168,24 @@ Yesql can be used to define setf functions using the `@setter` annotation:
     -- name: user-age @setter
     UPDATE user SET age = ? where name = ?
 
-Setters are imported using a slightly different syntax:
+When you use `:all-functions`, setters sharing the same name as a function (like `user-age` above) are imported along with their namesakes.
+
+Setters can be explicitly imported using a slightly different syntax:
 
     (yesql:import user-queries
       :from "sql/users.sql"
       :as :cl-yesql/sqlite
       :binding (#'user-age #’(setf user-age))
 
-The `:all-as-functions` syntax does not cover setters; if you want to import setters alongside functions, you need to use the `:import-set` syntax:
+    (yesql:import user-queries
+      :from "sql/users.sql"
+      :binding :all-setters)
+
+Using `:all-setters` imports all the setters, and only the setters. This can be useful if you define setters without equivalent readers. It can still be combined with `:all-functions`:
 
     (yesql:import user-queries
       :from "sql/users.sql"
-      :binding
-      (:import-set :all-as-functions
-                   (:only :all-as-setters #'(setf user-age))))
+      :binding (:all-functions :all-setters))
 
 A setter must have at least one positional argument. When using
 setters, be careful to make sure that the positional arguments are in
