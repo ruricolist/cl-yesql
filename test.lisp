@@ -389,3 +389,18 @@ INSERT INTO players_groups (player_id, other_player_id, player_group_id, is_owne
            (age (user-age db name)))
       (incf (user-age db name))
       (is (> (user-age db name) age)))))
+
+(yesql:import other-readme-example
+  :from "t/fact.sql"
+  :binding :all-functions)
+
+(test other-readme-example
+  (sqlite:with-open-database (db ":memory:")
+    (create-facts-table db)
+    (add-fact db "Lisp" "Lisp is a programmable programming language.")
+    (add-fact db "Lisp" "Lisp is fun")
+    (is (set-equal
+         (facts-about db "Lisp")
+         '("Lisp is a programmable programming language."
+           "Lisp is fun")
+         :test #'equal))))
