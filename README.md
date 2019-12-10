@@ -256,7 +256,7 @@ use with `cl-yesql/sqlite-prepared:with-prepared-statement`.
     (yesql:import sqlite-prepared
       :from "sql/sqlite.sql"
       :as :cl-yesql/sqlite-prepared
-      :values (#'record-kv))
+      :binding (#'record-kv))
 
     (defun save-kv-data (db plist)
       (sqlite:with-transaction db
