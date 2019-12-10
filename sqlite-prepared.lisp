@@ -55,7 +55,7 @@
     (with-gensyms (statement)
       `(lambda (,statement ,@args)
          ,@(loop for var in vars
-                 for offset = (var-offset q var)
+                 for offset from 1
                  collect `(sqlite:bind-parameter ,statement ,offset ,var))
          (sqlite:step-statement ,statement)
          (sqlite:reset-statement ,statement)))))

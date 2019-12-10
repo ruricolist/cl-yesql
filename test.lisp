@@ -404,3 +404,20 @@ INSERT INTO players_groups (player_id, other_player_id, player_group_id, is_owne
          '("Lisp is a programmable programming language."
            "Lisp is fun")
          :test #'equal))))
+
+(yesql:import prepared-example
+  :from "t/fact-prepared.sql"
+  :prefix p.
+  :binding (#'add-fact))
+
+(test other-readme-example
+  (sqlite:with-open-database (db ":memory:")
+    (create-facts-table db)
+    (cl-yesql/sqlite-prepared:with-prepared-statement (fact+ #'p.add-fact db)
+      (fact+ "Lisp" "Lisp is a programmable programming language.")
+      (fact+ "Lisp" "Lisp is fun"))
+    (is (set-equal
+         (facts-about db "Lisp")
+         '("Lisp is a programmable programming language."
+           "Lisp is fun")
+         :test #'equal))))
