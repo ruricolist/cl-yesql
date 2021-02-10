@@ -49,6 +49,11 @@
                           (apply ,thunk ,statement args))))
              ,@body))))))
 
+(defun result-row (statement)
+  (let ((column-count (sqlite-ffi:sqlite3-column-count (sqlite::handle statement))))
+    (loop for i below column-count
+       collect (sqlite:statement-column-value statement i))))
+
 (defun query-thunk (q)
   (let ((vars (query-vars q))
         (args (query-args q)))
@@ -57,5 +62,7 @@
          ,@(loop for var in vars
                  for offset from 1
                  collect `(sqlite:bind-parameter ,statement ,offset ,var))
-         (sqlite:step-statement ,statement)
-         (sqlite:reset-statement ,statement)))))
+         (prog1
+             (loop while (sqlite:step-statement ,statement)
+                collect (result-row ,statement))
+           (sqlite:reset-statement ,statement))))))
